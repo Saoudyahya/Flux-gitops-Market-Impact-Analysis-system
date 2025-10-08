@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: market-impact
-          image: your-registry/market-impact:latest
+          image: yahyazakaria123/market-impact-analysis-system-market-impact-service:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8082
