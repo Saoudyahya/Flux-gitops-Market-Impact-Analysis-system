@@ -1,0 +1,127 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: market-impact
+  namespace: financial-news
+  labels:
+    app: market-impact
+    component: analysis
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: market-impact
+  template:
+    metadata:
+      labels:
+        app: market-impact
+        component: analysis
+    spec:
+      containers:
+        - name: market-impact
+          image: your-registry/market-impact:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8082
+              name: http
+              protocol: TCP
+            - containerPort: 9090
+              name: grpc
+              protocol: TCP
+          env:
+            - name: SERVER_PORT
+              value: "8082"
+            - name: SERVER_CONTEXT_PATH
+              value: "/market-impact"
+            - name: GRPC_SERVER_PORT
+              value: "9090"
+
+            # Database Configuration
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: host
+            - name: DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: port
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: password
+            - name: DB_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: database
+
+            # Redis Configuration
+            - name: REDIS_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: redis-credentials
+                  key: host
+            - name: REDIS_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: redis-credentials
+                  key: port
+                  optional: true
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-credentials
+                  key: password
+                  optional: true
+
+            # NLP Processing Service
+            - name: NLP_PROCESSING_HOST
+              value: "nlp-processing.financial-news.svc.cluster.local"
+            - name: NLP_PROCESSING_PORT
+              value: "50052"
+
+            # News Ingestion Service
+            - name: NEWS_INGESTION_HOST
+              value: "news-ingestion.financial-news.svc.cluster.local"
+            - name: NEWS_INGESTION_PORT
+              value: "4002"
+
+            # Alert Signal Service
+            - name: ALERT_SIGNAL_HOST
+              value: "alert-signal.financial-news.svc.cluster.local"
+            - name: ALERT_SIGNAL_PORT
+              value: "9095"
+
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+
+          livenessProbe:
+            httpGet:
+              path: /market-impact/actuator/health
+              port: 8082
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /market-impact/actuator/health
+              port: 8082
+            initialDelaySeconds: 30
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3

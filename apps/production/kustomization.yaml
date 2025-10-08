@@ -1,0 +1,160 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: financial-news
+
+resources:
+  - ../news-ingestion
+  - ../nlp-processing
+  - ../market-impact
+  - ../alert-signal
+  - namespace.yaml
+
+
+
+# Strategic patches for production
+patches:
+  # News Ingestion Production
+  - target:
+      kind: Deployment
+      name: news-ingestion
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 3
+      - op: replace
+        path: /spec/template/spec/containers/0/image
+        value: your-registry/news-ingestion:v1.0.0
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: "1Gi"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: "500m"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: "2Gi"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/cpu
+        value: "1500m"
+
+  # NLP Processing Production
+  - target:
+      kind: Deployment
+      name: nlp-processing
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 5
+      - op: replace
+        path: /spec/template/spec/containers/0/image
+        value: your-registry/nlp-processing:v1.0.0
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: "2Gi"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: "1000m"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: "4Gi"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/cpu
+        value: "3000m"
+
+  # Market Impact Production
+  - target:
+      kind: Deployment
+      name: market-impact
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 3
+      - op: replace
+        path: /spec/template/spec/containers/0/image
+        value: your-registry/market-impact:v1.0.0
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: "1Gi"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: "500m"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: "2Gi"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/cpu
+        value: "1500m"
+
+  # Alert Signal Production
+  - target:
+      kind: Deployment
+      name: alert-signal
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 3
+      - op: replace
+        path: /spec/template/spec/containers/0/image
+        value: your-registry/alert-signal:v1.0.0
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: "512Mi"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: "200m"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: "1Gi"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/cpu
+        value: "1000m"
+
+  # HPA patches for production
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: nlp-processing
+    patch: |-
+      - op: replace
+        path: /spec/maxReplicas
+        value: 15
+      - op: replace
+        path: /spec/minReplicas
+        value: 5
+
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: news-ingestion
+    patch: |-
+      - op: replace
+        path: /spec/maxReplicas
+        value: 8
+      - op: replace
+        path: /spec/minReplicas
+        value: 3
+
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: market-impact
+    patch: |-
+      - op: replace
+        path: /spec/maxReplicas
+        value: 8
+      - op: replace
+        path: /spec/minReplicas
+        value: 3
+
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: alert-signal
+    patch: |-
+      - op: replace
+        path: /spec/maxReplicas
+        value: 8
+      - op: replace
+        path: /spec/minReplicas
+        value: 3
+
+commonLabels:
+  environment: production
+  managed-by: flux

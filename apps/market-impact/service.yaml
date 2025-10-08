@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: market-impact
+  namespace: financial-news
+  labels:
+    app: market-impact
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8082
+      targetPort: 8082
+      protocol: TCP
+      name: http
+    - port: 9090
+      targetPort: 9090
+      protocol: TCP
+      name: grpc
+  selector:
+    app: market-impact
