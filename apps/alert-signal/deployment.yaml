@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: alert-signal
-          image: your-registry/alert-signal:latest
+          image: yahyazakaria123/market-impact-analysis-system-alert-signal-service:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8081
