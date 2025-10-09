@@ -1,0 +1,122 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: market-impact-analysis-system
+  namespace: flux-system
+spec:
+  interval: 5m0s
+  chart:
+    spec:
+      chart: ./helm/market-impact-analysis-system
+      sourceRef:
+        kind: GitRepository
+        name: flux-system
+        namespace: flux-system
+      interval: 1m0s
+
+  values:
+    global:
+      namespace: financial-news
+      environment: production
+      imageRegistry: yahyazakaria123
+      imagePullPolicy: Always
+
+    database:
+      secretName: db-credentials
+
+    redis:
+      secretName: redis-credentials
+
+    apiKeys:
+      secretName: api-keys
+
+    commonLabels:
+      environment: production
+      managed-by: flux
+
+    alertSignal:
+      enabled: true
+      replicaCount: 2
+      image:
+        repository: market-impact-analysis-system-alert-signal-service
+        tag: latest
+      resources:
+        requests:
+          memory: "256Mi"
+          cpu: "100m"
+        limits:
+          memory: "512Mi"
+          cpu: "500m"
+      autoscaling:
+        enabled: true
+        minReplicas: 2
+        maxReplicas: 5
+
+    marketImpact:
+      enabled: true
+      replicaCount: 2
+      image:
+        repository: market-impact-analysis-system-market-impact-service
+        tag: latest
+      resources:
+        requests:
+          memory: "512Mi"
+          cpu: "250m"
+        limits:
+          memory: "1Gi"
+          cpu: "1000m"
+      autoscaling:
+        enabled: true
+        minReplicas: 2
+        maxReplicas: 5
+
+    newsIngestion:
+      enabled: true
+      replicaCount: 2
+      image:
+        repository: market-impact-analysis-system-news-ingestion-service
+        tag: latest
+      resources:
+        requests:
+          memory: "512Mi"
+          cpu: "250m"
+        limits:
+          memory: "1Gi"
+          cpu: "1000m"
+      autoscaling:
+        enabled: true
+        minReplicas: 2
+        maxReplicas: 5
+
+    nlpProcessing:
+      enabled: true
+      replicaCount: 3
+      image:
+        repository: market-impact-analysis-system-nlp-processing-service
+        tag: latest
+      resources:
+        requests:
+          memory: "1Gi"
+          cpu: "500m"
+        limits:
+          memory: "2Gi"
+          cpu: "2000m"
+      autoscaling:
+        enabled: true
+        minReplicas: 3
+        maxReplicas: 10
+
+  targetNamespace: financial-news
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+    cleanupOnFail: true
+  rollback:
+    recreate: true
+    cleanupOnFail: true
+  timeout: 10m0s
