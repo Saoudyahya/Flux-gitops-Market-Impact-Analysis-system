@@ -1,0 +1,75 @@
+🎉 Market Impact Analysis System has been deployed!
+
+Environment: {{ .Values.global.environment }}
+Namespace: {{ .Values.global.namespace }}
+
+📊 Deployed Services:
+{{- if .Values.alertSignal.enabled }}
+  ✅ Alert Signal Service ({{ .Values.alertSignal.replicaCount }} replicas)
+{{- end }}
+{{- if .Values.marketImpact.enabled }}
+  ✅ Market Impact Service ({{ .Values.marketImpact.replicaCount }} replicas)
+{{- end }}
+{{- if .Values.newsIngestion.enabled }}
+  ✅ News Ingestion Service ({{ .Values.newsIngestion.replicaCount }} replicas)
+{{- end }}
+{{- if .Values.nlpProcessing.enabled }}
+  ✅ NLP Processing Service ({{ .Values.nlpProcessing.replicaCount }} replicas)
+{{- end }}
+
+🔍 Check deployment status:
+  kubectl get all -n {{ .Values.global.namespace }}
+
+📈 Monitor pods:
+  kubectl get pods -n {{ .Values.global.namespace }} -w
+
+🔧 View logs:
+{{- if .Values.alertSignal.enabled }}
+  kubectl logs -f deployment/{{ .Values.alertSignal.name }} -n {{ .Values.global.namespace }}
+{{- end }}
+{{- if .Values.marketImpact.enabled }}
+  kubectl logs -f deployment/{{ .Values.marketImpact.name }} -n {{ .Values.global.namespace }}
+{{- end }}
+{{- if .Values.newsIngestion.enabled }}
+  kubectl logs -f deployment/{{ .Values.newsIngestion.name }} -n {{ .Values.global.namespace }}
+{{- end }}
+{{- if .Values.nlpProcessing.enabled }}
+  kubectl logs -f deployment/{{ .Values.nlpProcessing.name }} -n {{ .Values.global.namespace }}
+{{- end }}
+
+🌐 Service Endpoints:
+{{- if .Values.alertSignal.enabled }}
+  Alert Signal:
+    HTTP: {{ .Values.alertSignal.name }}.{{ .Values.global.namespace }}.svc.cluster.local:{{ .Values.alertSignal.service.httpPort }}
+    gRPC: {{ .Values.alertSignal.name }}.{{ .Values.global.namespace }}.svc.cluster.local:{{ .Values.alertSignal.service.grpcPort }}
+{{- end }}
+{{- if .Values.marketImpact.enabled }}
+  Market Impact:
+    HTTP: {{ .Values.marketImpact.name }}.{{ .Values.global.namespace }}.svc.cluster.local:{{ .Values.marketImpact.service.httpPort }}
+    gRPC: {{ .Values.marketImpact.name }}.{{ .Values.global.namespace }}.svc.cluster.local:{{ .Values.marketImpact.service.grpcPort }}
+{{- end }}
+{{- if .Values.newsIngestion.enabled }}
+  News Ingestion:
+    HTTP: {{ .Values.newsIngestion.name }}.{{ .Values.global.namespace }}.svc.cluster.local:{{ .Values.newsIngestion.service.httpPort }}
+    gRPC: {{ .Values.newsIngestion.name }}.{{ .Values.global.namespace }}.svc.cluster.local:{{ .Values.newsIngestion.service.grpcPort }}
+{{- end }}
+{{- if .Values.nlpProcessing.enabled }}
+  NLP Processing:
+    gRPC: {{ .Values.nlpProcessing.name }}.{{ .Values.global.namespace }}.svc.cluster.local:{{ .Values.nlpProcessing.service.grpcPort }}
+{{- end }}
+
+📝 Next Steps:
+  1. Verify all pods are running
+  2. Check service health endpoints
+  3. Monitor autoscaling behavior
+  4. Review logs for any errors
+
+⚠️  Important:
+  Make sure the following secrets are configured:
+  - db-credentials
+  - redis-credentials
+  - api-keys
+
+For more information, visit: https://github.com/your-repo
+
+Happy monitoring! 🚀
