@@ -1,127 +1,116 @@
+{{- if .Values.marketImpact.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: market-impact
-  namespace: financial-news
+  name: {{ .Values.marketImpact.name }}
+  namespace: {{ .Values.global.namespace }}
   labels:
-    app: market-impact
+    app: {{ .Values.marketImpact.name }}
     component: analysis
+    {{- include "market-impact.labels" . | nindent 4 }}
 spec:
-  replicas: 2
+  replicas: {{ .Values.marketImpact.replicaCount }}
   selector:
     matchLabels:
-      app: market-impact
+      app: {{ .Values.marketImpact.name }}
   template:
     metadata:
       labels:
-        app: market-impact
+        app: {{ .Values.marketImpact.name }}
         component: analysis
+        {{- with .Values.commonLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
       containers:
-        - name: market-impact
-          image: yahyazakaria123/market-impact-analysis-system-market-impact-service:latest
-          imagePullPolicy: Always
+        - name: {{ .Values.marketImpact.name }}
+          image: {{ include "market-impact.image" (dict "registry" .Values.global.imageRegistry "repository" .Values.marketImpact.image.repository "tag" .Values.marketImpact.image.tag) }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
           ports:
-            - containerPort: 8082
+            - containerPort: {{ .Values.marketImpact.service.httpPort }}
               name: http
               protocol: TCP
-            - containerPort: 9090
+            - containerPort: {{ .Values.marketImpact.service.grpcPort }}
               name: grpc
               protocol: TCP
           env:
             - name: SERVER_PORT
-              value: "8082"
+              value: {{ .Values.marketImpact.env.serverPort | quote }}
             - name: SERVER_CONTEXT_PATH
-              value: "/market-impact"
+              value: {{ .Values.marketImpact.env.serverContextPath | quote }}
             - name: GRPC_SERVER_PORT
-              value: "9090"
+              value: {{ .Values.marketImpact.env.grpcServerPort | quote }}
 
             # Database Configuration
             - name: DB_HOST
               valueFrom:
                 secretKeyRef:
-                  name: db-credentials
+                  name: {{ .Values.database.secretName }}
                   key: host
             - name: DB_PORT
               valueFrom:
                 secretKeyRef:
-                  name: db-credentials
+                  name: {{ .Values.database.secretName }}
                   key: port
             - name: DB_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: db-credentials
+                  name: {{ .Values.database.secretName }}
                   key: username
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: db-credentials
+                  name: {{ .Values.database.secretName }}
                   key: password
             - name: DB_DATABASE
               valueFrom:
                 secretKeyRef:
-                  name: db-credentials
+                  name: {{ .Values.database.secretName }}
                   key: database
 
             # Redis Configuration
             - name: REDIS_HOST
               valueFrom:
                 secretKeyRef:
-                  name: redis-credentials
+                  name: {{ .Values.redis.secretName }}
                   key: host
             - name: REDIS_PORT
               valueFrom:
                 secretKeyRef:
-                  name: redis-credentials
+                  name: {{ .Values.redis.secretName }}
                   key: port
                   optional: true
             - name: REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: redis-credentials
+                  name: {{ .Values.redis.secretName }}
                   key: password
                   optional: true
 
             # NLP Processing Service
             - name: NLP_PROCESSING_HOST
-              value: "nlp-processing.financial-news.svc.cluster.local"
+              value: {{ .Values.marketImpact.env.nlpProcessingHost | quote }}
             - name: NLP_PROCESSING_PORT
-              value: "50052"
+              value: {{ .Values.marketImpact.env.nlpProcessingPort | quote }}
 
             # News Ingestion Service
             - name: NEWS_INGESTION_HOST
-              value: "news-ingestion.financial-news.svc.cluster.local"
+              value: {{ .Values.marketImpact.env.newsIngestionHost | quote }}
             - name: NEWS_INGESTION_PORT
-              value: "4002"
+              value: {{ .Values.marketImpact.env.newsIngestionPort | quote }}
 
             # Alert Signal Service
             - name: ALERT_SIGNAL_HOST
-              value: "alert-signal.financial-news.svc.cluster.local"
+              value: {{ .Values.marketImpact.env.alertSignalHost | quote }}
             - name: ALERT_SIGNAL_PORT
-              value: "9095"
+              value: {{ .Values.marketImpact.env.alertSignalPort | quote }}
 
           resources:
-            requests:
-              memory: "512Mi"
-              cpu: "250m"
-            limits:
-              memory: "1Gi"
-              cpu: "1000m"
+            {{- toYaml .Values.marketImpact.resources | nindent 12 }}
 
           livenessProbe:
-            httpGet:
-              path: /market-impact/actuator/health
-              port: 8082
-            initialDelaySeconds: 60
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 3
+            {{- toYaml .Values.marketImpact.livenessProbe | nindent 12 }}
 
           readinessProbe:
-            httpGet:
-              path: /market-impact/actuator/health
-              port: 8082
-            initialDelaySeconds: 30
-            periodSeconds: 5
-            timeoutSeconds: 3
-            failureThreshold: 3
+            {{- toYaml .Values.marketImpact.readinessProbe | nindent 12 }}
+{{- end }}

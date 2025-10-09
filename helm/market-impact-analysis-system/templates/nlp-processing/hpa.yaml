@@ -1,41 +1,38 @@
+{{- if and .Values.nlpProcessing.enabled .Values.nlpProcessing.autoscaling.enabled }}
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: nlp-processing
-  namespace: financial-news
+  name: {{ .Values.nlpProcessing.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "market-impact.labels" . | nindent 4 }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: nlp-processing
-  minReplicas: 3
-  maxReplicas: 10
+    name: {{ .Values.nlpProcessing.name }}
+  minReplicas: {{ .Values.nlpProcessing.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.nlpProcessing.autoscaling.maxReplicas }}
   metrics:
     - type: Resource
       resource:
         name: cpu
         target:
           type: Utilization
-          averageUtilization: 70
+          averageUtilization: {{ .Values.nlpProcessing.autoscaling.targetCPUUtilizationPercentage }}
     - type: Resource
       resource:
         name: memory
         target:
           type: Utilization
-          averageUtilization: 80
+          averageUtilization: {{ .Values.nlpProcessing.autoscaling.targetMemoryUtilizationPercentage }}
   behavior:
     scaleDown:
-      stabilizationWindowSeconds: 300
+      stabilizationWindowSeconds: {{ .Values.nlpProcessing.autoscaling.scaleDown.stabilizationWindowSeconds }}
       policies:
-        - type: Percent
-          value: 50
-          periodSeconds: 60
+        {{- toYaml .Values.nlpProcessing.autoscaling.scaleDown.policies | nindent 8 }}
     scaleUp:
-      stabilizationWindowSeconds: 30
+      stabilizationWindowSeconds: {{ .Values.nlpProcessing.autoscaling.scaleUp.stabilizationWindowSeconds }}
       policies:
-        - type: Percent
-          value: 100
-          periodSeconds: 15
-        - type: Pods
-          value: 2
-          periodSeconds: 15
+        {{- toYaml .Values.nlpProcessing.autoscaling.scaleUp.policies | nindent 8 }}
+{{- end }}

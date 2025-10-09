@@ -1,107 +1,96 @@
+{{- if .Values.alertSignal.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: alert-signal
-  namespace: financial-news
+  name: {{ .Values.alertSignal.name }}
+  namespace: {{ .Values.global.namespace }}
   labels:
-    app: alert-signal
+    app: {{ .Values.alertSignal.name }}
     component: alerts
+    {{- include "market-impact.labels" . | nindent 4 }}
 spec:
-  replicas: 2
+  replicas: {{ .Values.alertSignal.replicaCount }}
   selector:
     matchLabels:
-      app: alert-signal
+      app: {{ .Values.alertSignal.name }}
   template:
     metadata:
       labels:
-        app: alert-signal
+        app: {{ .Values.alertSignal.name }}
         component: alerts
+        {{- with .Values.commonLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
       containers:
-        - name: alert-signal
-          image: yahyazakaria123/market-impact-analysis-system-alert-signal-service:latest
-          imagePullPolicy: Always
+        - name: {{ .Values.alertSignal.name }}
+          image: {{ include "market-impact.image" (dict "registry" .Values.global.imageRegistry "repository" .Values.alertSignal.image.repository "tag" .Values.alertSignal.image.tag) }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
           ports:
-            - containerPort: 8081
+            - containerPort: {{ .Values.alertSignal.service.httpPort }}
               name: http
               protocol: TCP
-            - containerPort: 9095
+            - containerPort: {{ .Values.alertSignal.service.grpcPort }}
               name: grpc
               protocol: TCP
           env:
             - name: SERVER_PORT
-              value: "8081"
+              value: {{ .Values.alertSignal.env.serverPort | quote }}
             - name: GRPC_SERVER_PORT
-              value: "9095"
+              value: {{ .Values.alertSignal.env.grpcServerPort | quote }}
 
             # Database Configuration
             - name: DB_HOST
               valueFrom:
                 secretKeyRef:
-                  name: db-credentials
+                  name: {{ .Values.database.secretName }}
                   key: host
             - name: DB_PORT
               valueFrom:
                 secretKeyRef:
-                  name: db-credentials
+                  name: {{ .Values.database.secretName }}
                   key: port
             - name: DB_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: db-credentials
+                  name: {{ .Values.database.secretName }}
                   key: username
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: db-credentials
+                  name: {{ .Values.database.secretName }}
                   key: password
             - name: DB_DATABASE
               valueFrom:
                 secretKeyRef:
-                  name: db-credentials
+                  name: {{ .Values.database.secretName }}
                   key: database
 
             # Redis Configuration
             - name: REDIS_HOST
               valueFrom:
                 secretKeyRef:
-                  name: redis-credentials
+                  name: {{ .Values.redis.secretName }}
                   key: host
             - name: REDIS_PORT
               valueFrom:
                 secretKeyRef:
-                  name: redis-credentials
+                  name: {{ .Values.redis.secretName }}
                   key: port
                   optional: true
             - name: REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: redis-credentials
+                  name: {{ .Values.redis.secretName }}
                   key: password
                   optional: true
 
           resources:
-            requests:
-              memory: "256Mi"
-              cpu: "100m"
-            limits:
-              memory: "512Mi"
-              cpu: "500m"
+            {{- toYaml .Values.alertSignal.resources | nindent 12 }}
 
           livenessProbe:
-            httpGet:
-              path: /api/actuator/health
-              port: 8081
-            initialDelaySeconds: 60
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 3
+            {{- toYaml .Values.alertSignal.livenessProbe | nindent 12 }}
 
           readinessProbe:
-            httpGet:
-              path: /api/actuator/health
-              port: 8081
-            initialDelaySeconds: 30
-            periodSeconds: 5
-            timeoutSeconds: 3
-            failureThreshold: 3
+            {{- toYaml .Values.alertSignal.readinessProbe | nindent 12 }}
+{{- end }}

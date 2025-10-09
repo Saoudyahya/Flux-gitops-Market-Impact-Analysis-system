@@ -1,38 +1,38 @@
+{{- if and .Values.alertSignal.enabled .Values.alertSignal.autoscaling.enabled }}
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: alert-signal
-  namespace: financial-news
+  name: {{ .Values.alertSignal.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "market-impact.labels" . | nindent 4 }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: alert-signal
-  minReplicas: 2
-  maxReplicas: 5
+    name: {{ .Values.alertSignal.name }}
+  minReplicas: {{ .Values.alertSignal.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.alertSignal.autoscaling.maxReplicas }}
   metrics:
     - type: Resource
       resource:
         name: cpu
         target:
           type: Utilization
-          averageUtilization: 70
+          averageUtilization: {{ .Values.alertSignal.autoscaling.targetCPUUtilizationPercentage }}
     - type: Resource
       resource:
         name: memory
         target:
           type: Utilization
-          averageUtilization: 80
+          averageUtilization: {{ .Values.alertSignal.autoscaling.targetMemoryUtilizationPercentage }}
   behavior:
     scaleDown:
-      stabilizationWindowSeconds: 300
+      stabilizationWindowSeconds: {{ .Values.alertSignal.autoscaling.scaleDown.stabilizationWindowSeconds }}
       policies:
-        - type: Percent
-          value: 50
-          periodSeconds: 60
+        {{- toYaml .Values.alertSignal.autoscaling.scaleDown.policies | nindent 8 }}
     scaleUp:
-      stabilizationWindowSeconds: 60
+      stabilizationWindowSeconds: {{ .Values.alertSignal.autoscaling.scaleUp.stabilizationWindowSeconds }}
       policies:
-        - type: Percent
-          value: 100
-          periodSeconds: 30
+        {{- toYaml .Values.alertSignal.autoscaling.scaleUp.policies | nindent 8 }}
+{{- end }}

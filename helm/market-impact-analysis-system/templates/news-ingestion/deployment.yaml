@@ -1,84 +1,89 @@
+{{- if .Values.newsIngestion.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: news-ingestion
-  namespace: financial-news
+  name: {{ .Values.newsIngestion.name }}
+  namespace: {{ .Values.global.namespace }}
   labels:
-    app: news-ingestion
+    app: {{ .Values.newsIngestion.name }}
     component: ingestion
+    {{- include "market-impact.labels" . | nindent 4 }}
 spec:
-  replicas: 2
+  replicas: {{ .Values.newsIngestion.replicaCount }}
   selector:
     matchLabels:
-      app: news-ingestion
+      app: {{ .Values.newsIngestion.name }}
   template:
     metadata:
       labels:
-        app: news-ingestion
+        app: {{ .Values.newsIngestion.name }}
         component: ingestion
+        {{- with .Values.commonLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
       containers:
-        - name: news-ingestion
-          image: yahyazakaria123/market-impact-analysis-system-news-ingestion-service:latest
-          imagePullPolicy: Always
+        - name: {{ .Values.newsIngestion.name }}
+          image: {{ include "market-impact.image" (dict "registry" .Values.global.imageRegistry "repository" .Values.newsIngestion.image.repository "tag" .Values.newsIngestion.image.tag) }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
           ports:
-            - containerPort: 4001
+            - containerPort: {{ .Values.newsIngestion.service.httpPort }}
               name: http
               protocol: TCP
-            - containerPort: 4002
+            - containerPort: {{ .Values.newsIngestion.service.grpcPort }}
               name: grpc
               protocol: TCP
           env:
             - name: SERVER_HTTP_PORT
-              value: "4001"
+              value: {{ .Values.newsIngestion.env.serverHttpPort | quote }}
             - name: SERVER_GRPC_PORT
-              value: "4002"
+              value: {{ .Values.newsIngestion.env.serverGrpcPort | quote }}
             - name: SERVER_ENVIRONMENT
-              value: "production"
+              value: {{ .Values.newsIngestion.env.serverEnvironment | quote }}
 
             # Database Configuration
             - name: DB_HOST
               valueFrom:
                 secretKeyRef:
-                  name: db-credentials
+                  name: {{ .Values.database.secretName }}
                   key: host
             - name: DB_PORT
               valueFrom:
                 secretKeyRef:
-                  name: db-credentials
+                  name: {{ .Values.database.secretName }}
                   key: port
             - name: DB_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: db-credentials
+                  name: {{ .Values.database.secretName }}
                   key: username
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: db-credentials
+                  name: {{ .Values.database.secretName }}
                   key: password
             - name: DB_DATABASE
               valueFrom:
                 secretKeyRef:
-                  name: db-credentials
+                  name: {{ .Values.database.secretName }}
                   key: database
 
             # Redis Configuration
             - name: REDIS_HOST
               valueFrom:
                 secretKeyRef:
-                  name: redis-credentials
+                  name: {{ .Values.redis.secretName }}
                   key: host
             - name: REDIS_PORT
               valueFrom:
                 secretKeyRef:
-                  name: redis-credentials
+                  name: {{ .Values.redis.secretName }}
                   key: port
                   optional: true
             - name: REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: redis-credentials
+                  name: {{ .Values.redis.secretName }}
                   key: password
                   optional: true
 
@@ -86,38 +91,22 @@ spec:
             - name: NEWSAPI_KEY
               valueFrom:
                 secretKeyRef:
-                  name: api-keys
+                  name: {{ .Values.apiKeys.secretName }}
                   key: newsapi-key
                   optional: true
 
             # NLP Service Configuration
             - name: NLP_PROCESSING_HOST
-              value: "nlp-processing.financial-news.svc.cluster.local"
+              value: {{ .Values.newsIngestion.env.nlpProcessingHost | quote }}
             - name: NLP_PROCESSING_PORT
-              value: "50052"
+              value: {{ .Values.newsIngestion.env.nlpProcessingPort | quote }}
 
           resources:
-            requests:
-              memory: "512Mi"
-              cpu: "250m"
-            limits:
-              memory: "1Gi"
-              cpu: "1000m"
+            {{- toYaml .Values.newsIngestion.resources | nindent 12 }}
 
           livenessProbe:
-            httpGet:
-              path: /health
-              port: 4001
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 3
+            {{- toYaml .Values.newsIngestion.livenessProbe | nindent 12 }}
 
           readinessProbe:
-            httpGet:
-              path: /health
-              port: 4001
-            initialDelaySeconds: 10
-            periodSeconds: 5
-            timeoutSeconds: 3
-            failureThreshold: 3
+            {{- toYaml .Values.newsIngestion.readinessProbe | nindent 12 }}
+{{- end }}

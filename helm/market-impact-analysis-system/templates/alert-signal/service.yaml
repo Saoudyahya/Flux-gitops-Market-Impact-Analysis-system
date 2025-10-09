@@ -1,20 +1,23 @@
+{{- if .Values.alertSignal.enabled }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: alert-signal
-  namespace: financial-news
+  name: {{ .Values.alertSignal.name }}
+  namespace: {{ .Values.global.namespace }}
   labels:
-    app: alert-signal
+    app: {{ .Values.alertSignal.name }}
+    {{- include "market-impact.labels" . | nindent 4 }}
 spec:
-  type: ClusterIP
+  type: {{ .Values.alertSignal.service.type }}
   ports:
-    - port: 8081
-      targetPort: 8081
+    - port: {{ .Values.alertSignal.service.httpPort }}
+      targetPort: {{ .Values.alertSignal.service.httpPort }}
       protocol: TCP
       name: http
-    - port: 9095
-      targetPort: 9095
+    - port: {{ .Values.alertSignal.service.grpcPort }}
+      targetPort: {{ .Values.alertSignal.service.grpcPort }}
       protocol: TCP
       name: grpc
   selector:
-    app: alert-signal
+    app: {{ .Values.alertSignal.name }}
+{{- end }}

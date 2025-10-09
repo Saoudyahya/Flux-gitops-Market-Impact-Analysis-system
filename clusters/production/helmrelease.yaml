@@ -1,0 +1,47 @@
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: market-impact-analysis-system
+  namespace: flux-system
+spec:
+  interval: 5m0s
+  chart:
+    spec:
+      chart: ./helm/market-impact-analysis-system
+      sourceRef:
+        kind: GitRepository
+        name: flux-system
+        namespace: flux-system
+      interval: 1m0s
+
+  # Use production values
+  valuesFrom:
+    - kind: ConfigMap
+      name: helm-values-production
+      valuesKey: values-production.yaml
+
+  # Install in the production namespace
+  targetNamespace: financial-news
+
+  # Automatic upgrades
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+
+  upgrade:
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+    cleanupOnFail: true
+
+  # Rollback configuration
+  rollback:
+    recreate: true
+    cleanupOnFail: true
+
+  # Health checks
+  test:
+    enable: false
+
+  timeout: 10m0s

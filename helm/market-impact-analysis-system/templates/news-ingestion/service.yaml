@@ -1,20 +1,23 @@
+{{- if .Values.newsIngestion.enabled }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: news-ingestion
-  namespace: financial-news
+  name: {{ .Values.newsIngestion.name }}
+  namespace: {{ .Values.global.namespace }}
   labels:
-    app: news-ingestion
+    app: {{ .Values.newsIngestion.name }}
+    {{- include "market-impact.labels" . | nindent 4 }}
 spec:
-  type: ClusterIP
+  type: {{ .Values.newsIngestion.service.type }}
   ports:
-    - port: 4001
-      targetPort: 4001
+    - port: {{ .Values.newsIngestion.service.httpPort }}
+      targetPort: {{ .Values.newsIngestion.service.httpPort }}
       protocol: TCP
       name: http
-    - port: 4002
-      targetPort: 4002
+    - port: {{ .Values.newsIngestion.service.grpcPort }}
+      targetPort: {{ .Values.newsIngestion.service.grpcPort }}
       protocol: TCP
       name: grpc
   selector:
-    app: news-ingestion
+    app: {{ .Values.newsIngestion.name }}
+{{- end }}

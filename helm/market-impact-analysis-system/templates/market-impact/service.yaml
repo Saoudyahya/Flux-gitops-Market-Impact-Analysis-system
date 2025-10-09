@@ -1,20 +1,23 @@
+{{- if .Values.marketImpact.enabled }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: market-impact
-  namespace: financial-news
+  name: {{ .Values.marketImpact.name }}
+  namespace: {{ .Values.global.namespace }}
   labels:
-    app: market-impact
+    app: {{ .Values.marketImpact.name }}
+    {{- include "market-impact.labels" . | nindent 4 }}
 spec:
-  type: ClusterIP
+  type: {{ .Values.marketImpact.service.type }}
   ports:
-    - port: 8082
-      targetPort: 8082
+    - port: {{ .Values.marketImpact.service.httpPort }}
+      targetPort: {{ .Values.marketImpact.service.httpPort }}
       protocol: TCP
       name: http
-    - port: 9090
-      targetPort: 9090
+    - port: {{ .Values.marketImpact.service.grpcPort }}
+      targetPort: {{ .Values.marketImpact.service.grpcPort }}
       protocol: TCP
       name: grpc
   selector:
-    app: market-impact
+    app: {{ .Values.marketImpact.name }}
+{{- end }}

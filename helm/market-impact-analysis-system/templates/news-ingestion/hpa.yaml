@@ -1,38 +1,38 @@
+{{- if and .Values.newsIngestion.enabled .Values.newsIngestion.autoscaling.enabled }}
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: news-ingestion
-  namespace: financial-news
+  name: {{ .Values.newsIngestion.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "market-impact.labels" . | nindent 4 }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: news-ingestion
-  minReplicas: 2
-  maxReplicas: 5
+    name: {{ .Values.newsIngestion.name }}
+  minReplicas: {{ .Values.newsIngestion.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.newsIngestion.autoscaling.maxReplicas }}
   metrics:
     - type: Resource
       resource:
         name: cpu
         target:
           type: Utilization
-          averageUtilization: 70
+          averageUtilization: {{ .Values.newsIngestion.autoscaling.targetCPUUtilizationPercentage }}
     - type: Resource
       resource:
         name: memory
         target:
           type: Utilization
-          averageUtilization: 80
+          averageUtilization: {{ .Values.newsIngestion.autoscaling.targetMemoryUtilizationPercentage }}
   behavior:
     scaleDown:
-      stabilizationWindowSeconds: 300
+      stabilizationWindowSeconds: {{ .Values.newsIngestion.autoscaling.scaleDown.stabilizationWindowSeconds }}
       policies:
-        - type: Percent
-          value: 50
-          periodSeconds: 60
+        {{- toYaml .Values.newsIngestion.autoscaling.scaleDown.policies | nindent 8 }}
     scaleUp:
-      stabilizationWindowSeconds: 60
+      stabilizationWindowSeconds: {{ .Values.newsIngestion.autoscaling.scaleUp.stabilizationWindowSeconds }}
       policies:
-        - type: Percent
-          value: 100
-          periodSeconds: 30
+        {{- toYaml .Values.newsIngestion.autoscaling.scaleUp.policies | nindent 8 }}
+{{- end }}

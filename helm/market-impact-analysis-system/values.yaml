@@ -1,0 +1,302 @@
+# Default values for market-impact-analysis-system
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+global:
+  namespace: financial-news
+  environment: development
+  imageRegistry: yahyazakaria123
+  imagePullPolicy: Always
+
+# Database credentials secret
+database:
+  secretName: db-credentials
+  host: ""
+  port: ""
+  username: ""
+  password: ""
+  database: ""
+
+# Redis credentials secret
+redis:
+  secretName: redis-credentials
+  host: ""
+  port: ""
+  password: ""
+
+# API Keys secret
+apiKeys:
+  secretName: api-keys
+  newsapiKey: ""
+
+# Common labels applied to all resources
+commonLabels:
+  managed-by: helm
+
+# Alert Signal Service
+alertSignal:
+  enabled: true
+  name: alert-signal
+  replicaCount: 2
+
+  image:
+    repository: market-impact-analysis-system-alert-signal-service
+    tag: latest
+
+  service:
+    type: ClusterIP
+    httpPort: 8081
+    grpcPort: 9095
+
+  env:
+    serverPort: "8081"
+    grpcServerPort: "9095"
+
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+  livenessProbe:
+    httpGet:
+      path: /api/actuator/health
+      port: 8081
+    initialDelaySeconds: 60
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+  readinessProbe:
+    httpGet:
+      path: /api/actuator/health
+      port: 8081
+    initialDelaySeconds: 30
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 50
+          periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 30
+
+# Market Impact Service
+marketImpact:
+  enabled: true
+  name: market-impact
+  replicaCount: 2
+
+  image:
+    repository: market-impact-analysis-system-market-impact-service
+    tag: latest
+
+  service:
+    type: ClusterIP
+    httpPort: 8082
+    grpcPort: 9090
+
+  env:
+    serverPort: "8082"
+    serverContextPath: "/market-impact"
+    grpcServerPort: "9090"
+    nlpProcessingHost: "nlp-processing.financial-news.svc.cluster.local"
+    nlpProcessingPort: "50052"
+    newsIngestionHost: "news-ingestion.financial-news.svc.cluster.local"
+    newsIngestionPort: "4002"
+    alertSignalHost: "alert-signal.financial-news.svc.cluster.local"
+    alertSignalPort: "9095"
+
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
+
+  livenessProbe:
+    httpGet:
+      path: /market-impact/actuator/health
+      port: 8082
+    initialDelaySeconds: 60
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+  readinessProbe:
+    httpGet:
+      path: /market-impact/actuator/health
+      port: 8082
+    initialDelaySeconds: 30
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 50
+          periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 30
+
+# News Ingestion Service
+newsIngestion:
+  enabled: true
+  name: news-ingestion
+  replicaCount: 2
+
+  image:
+    repository: market-impact-analysis-system-news-ingestion-service
+    tag: latest
+
+  service:
+    type: ClusterIP
+    httpPort: 4001
+    grpcPort: 4002
+
+  env:
+    serverHttpPort: "4001"
+    serverGrpcPort: "4002"
+    serverEnvironment: "production"
+    nlpProcessingHost: "nlp-processing.financial-news.svc.cluster.local"
+    nlpProcessingPort: "50052"
+
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
+
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: 4001
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+  readinessProbe:
+    httpGet:
+      path: /health
+      port: 4001
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 50
+          periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 30
+
+# NLP Processing Service
+nlpProcessing:
+  enabled: true
+  name: nlp-processing
+  replicaCount: 3
+
+  image:
+    repository: market-impact-analysis-system-nlp-processing-service
+    tag: latest
+
+  service:
+    type: ClusterIP
+    grpcPort: 50052
+
+  env:
+    serverGrpcPort: "50052"
+    serverEnvironment: "production"
+    newsIngestionHost: "news-ingestion.financial-news.svc.cluster.local"
+    newsIngestionPort: "4002"
+
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "500m"
+    limits:
+      memory: "2Gi"
+      cpu: "2000m"
+
+  livenessProbe:
+    exec:
+      command: ["/usr/local/bin/grpc_health_probe", "-addr=:50052"]
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+  readinessProbe:
+    exec:
+      command: ["/usr/local/bin/grpc_health_probe", "-addr=:50052"]
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 50
+          periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 30
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 15
+        - type: Pods
+          value: 2
+          periodSeconds: 15

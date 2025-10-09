@@ -1,38 +1,38 @@
+{{- if and .Values.marketImpact.enabled .Values.marketImpact.autoscaling.enabled }}
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: market-impact
-  namespace: financial-news
+  name: {{ .Values.marketImpact.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "market-impact.labels" . | nindent 4 }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: market-impact
-  minReplicas: 2
-  maxReplicas: 5
+    name: {{ .Values.marketImpact.name }}
+  minReplicas: {{ .Values.marketImpact.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.marketImpact.autoscaling.maxReplicas }}
   metrics:
     - type: Resource
       resource:
         name: cpu
         target:
           type: Utilization
-          averageUtilization: 70
+          averageUtilization: {{ .Values.marketImpact.autoscaling.targetCPUUtilizationPercentage }}
     - type: Resource
       resource:
         name: memory
         target:
           type: Utilization
-          averageUtilization: 80
+          averageUtilization: {{ .Values.marketImpact.autoscaling.targetMemoryUtilizationPercentage }}
   behavior:
     scaleDown:
-      stabilizationWindowSeconds: 300
+      stabilizationWindowSeconds: {{ .Values.marketImpact.autoscaling.scaleDown.stabilizationWindowSeconds }}
       policies:
-        - type: Percent
-          value: 50
-          periodSeconds: 60
+        {{- toYaml .Values.marketImpact.autoscaling.scaleDown.policies | nindent 8 }}
     scaleUp:
-      stabilizationWindowSeconds: 60
+      stabilizationWindowSeconds: {{ .Values.marketImpact.autoscaling.scaleUp.stabilizationWindowSeconds }}
       policies:
-        - type: Percent
-          value: 100
-          periodSeconds: 30
+        {{- toYaml .Values.marketImpact.autoscaling.scaleUp.policies | nindent 8 }}
+{{- end }}

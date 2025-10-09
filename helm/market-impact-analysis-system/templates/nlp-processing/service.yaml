@@ -1,16 +1,19 @@
+{{- if .Values.nlpProcessing.enabled }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: nlp-processing
-  namespace: financial-news
+  name: {{ .Values.nlpProcessing.name }}
+  namespace: {{ .Values.global.namespace }}
   labels:
-    app: nlp-processing
+    app: {{ .Values.nlpProcessing.name }}
+    {{- include "market-impact.labels" . | nindent 4 }}
 spec:
-  type: ClusterIP
+  type: {{ .Values.nlpProcessing.service.type }}
   ports:
-    - port: 50052
-      targetPort: 50052
+    - port: {{ .Values.nlpProcessing.service.grpcPort }}
+      targetPort: {{ .Values.nlpProcessing.service.grpcPort }}
       protocol: TCP
       name: grpc
   selector:
-    app: nlp-processing
+    app: {{ .Values.nlpProcessing.name }}
+{{- end }}
