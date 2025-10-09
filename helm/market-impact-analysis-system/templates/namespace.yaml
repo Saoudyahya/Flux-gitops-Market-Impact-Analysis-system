@@ -4,9 +4,6 @@ metadata:
   name: {{ .Values.global.namespace }}
   labels:
     name: {{ .Values.global.namespace }}
-    {{- if not .Values.commonLabels.environment }}
-    environment: {{ .Values.global.environment }}
-    {{- end }}
     {{- with .Values.commonLabels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
