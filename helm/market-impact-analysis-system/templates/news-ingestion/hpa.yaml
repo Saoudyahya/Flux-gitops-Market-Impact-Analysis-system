@@ -1,0 +1,38 @@
+{{- if and .Values.newsIngestion.enabled .Values.newsIngestion.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ .Values.newsIngestion.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "market-impact.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ .Values.newsIngestion.name }}
+  minReplicas: {{ .Values.newsIngestion.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.newsIngestion.autoscaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.newsIngestion.autoscaling.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.newsIngestion.autoscaling.targetMemoryUtilizationPercentage }}
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: {{ .Values.newsIngestion.autoscaling.scaleDown.stabilizationWindowSeconds }}
+      policies:
+        {{- toYaml .Values.newsIngestion.autoscaling.scaleDown.policies | nindent 8 }}
+    scaleUp:
+      stabilizationWindowSeconds: {{ .Values.newsIngestion.autoscaling.scaleUp.stabilizationWindowSeconds }}
+      policies:
+        {{- toYaml .Values.newsIngestion.autoscaling.scaleUp.policies | nindent 8 }}
+{{- end }}

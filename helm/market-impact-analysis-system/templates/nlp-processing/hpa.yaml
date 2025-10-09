@@ -1,0 +1,38 @@
+{{- if and .Values.nlpProcessing.enabled .Values.nlpProcessing.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ .Values.nlpProcessing.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "market-impact.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ .Values.nlpProcessing.name }}
+  minReplicas: {{ .Values.nlpProcessing.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.nlpProcessing.autoscaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.nlpProcessing.autoscaling.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.nlpProcessing.autoscaling.targetMemoryUtilizationPercentage }}
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: {{ .Values.nlpProcessing.autoscaling.scaleDown.stabilizationWindowSeconds }}
+      policies:
+        {{- toYaml .Values.nlpProcessing.autoscaling.scaleDown.policies | nindent 8 }}
+    scaleUp:
+      stabilizationWindowSeconds: {{ .Values.nlpProcessing.autoscaling.scaleUp.stabilizationWindowSeconds }}
+      policies:
+        {{- toYaml .Values.nlpProcessing.autoscaling.scaleUp.policies | nindent 8 }}
+{{- end }}

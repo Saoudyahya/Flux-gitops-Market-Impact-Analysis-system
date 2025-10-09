@@ -1,0 +1,23 @@
+{{- if .Values.newsIngestion.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.newsIngestion.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ .Values.newsIngestion.name }}
+    {{- include "market-impact.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.newsIngestion.service.type }}
+  ports:
+    - port: {{ .Values.newsIngestion.service.httpPort }}
+      targetPort: {{ .Values.newsIngestion.service.httpPort }}
+      protocol: TCP
+      name: http
+    - port: {{ .Values.newsIngestion.service.grpcPort }}
+      targetPort: {{ .Values.newsIngestion.service.grpcPort }}
+      protocol: TCP
+      name: grpc
+  selector:
+    app: {{ .Values.newsIngestion.name }}
+{{- end }}

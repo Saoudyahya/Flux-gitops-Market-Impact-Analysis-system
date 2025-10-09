@@ -1,0 +1,116 @@
+{{- if .Values.marketImpact.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.marketImpact.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ .Values.marketImpact.name }}
+    component: analysis
+    {{- include "market-impact.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.marketImpact.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.marketImpact.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.marketImpact.name }}
+        component: analysis
+        {{- with .Values.commonLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      containers:
+        - name: {{ .Values.marketImpact.name }}
+          image: {{ include "market-impact.image" (dict "registry" .Values.global.imageRegistry "repository" .Values.marketImpact.image.repository "tag" .Values.marketImpact.image.tag) }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - containerPort: {{ .Values.marketImpact.service.httpPort }}
+              name: http
+              protocol: TCP
+            - containerPort: {{ .Values.marketImpact.service.grpcPort }}
+              name: grpc
+              protocol: TCP
+          env:
+            - name: SERVER_PORT
+              value: {{ .Values.marketImpact.env.serverPort | quote }}
+            - name: SERVER_CONTEXT_PATH
+              value: {{ .Values.marketImpact.env.serverContextPath | quote }}
+            - name: GRPC_SERVER_PORT
+              value: {{ .Values.marketImpact.env.grpcServerPort | quote }}
+
+            # Database Configuration
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.secretName }}
+                  key: host
+            - name: DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.secretName }}
+                  key: port
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.secretName }}
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.secretName }}
+                  key: password
+            - name: DB_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.secretName }}
+                  key: database
+
+            # Redis Configuration
+            - name: REDIS_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.redis.secretName }}
+                  key: host
+            - name: REDIS_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.redis.secretName }}
+                  key: port
+                  optional: true
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.redis.secretName }}
+                  key: password
+                  optional: true
+
+            # NLP Processing Service
+            - name: NLP_PROCESSING_HOST
+              value: {{ .Values.marketImpact.env.nlpProcessingHost | quote }}
+            - name: NLP_PROCESSING_PORT
+              value: {{ .Values.marketImpact.env.nlpProcessingPort | quote }}
+
+            # News Ingestion Service
+            - name: NEWS_INGESTION_HOST
+              value: {{ .Values.marketImpact.env.newsIngestionHost | quote }}
+            - name: NEWS_INGESTION_PORT
+              value: {{ .Values.marketImpact.env.newsIngestionPort | quote }}
+
+            # Alert Signal Service
+            - name: ALERT_SIGNAL_HOST
+              value: {{ .Values.marketImpact.env.alertSignalHost | quote }}
+            - name: ALERT_SIGNAL_PORT
+              value: {{ .Values.marketImpact.env.alertSignalPort | quote }}
+
+          resources:
+            {{- toYaml .Values.marketImpact.resources | nindent 12 }}
+
+          livenessProbe:
+            {{- toYaml .Values.marketImpact.livenessProbe | nindent 12 }}
+
+          readinessProbe:
+            {{- toYaml .Values.marketImpact.readinessProbe | nindent 12 }}
+{{- end }}

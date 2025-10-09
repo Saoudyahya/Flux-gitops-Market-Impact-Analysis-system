@@ -1,0 +1,99 @@
+{{- if .Values.nlpProcessing.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.nlpProcessing.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ .Values.nlpProcessing.name }}
+    component: nlp
+    {{- include "market-impact.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.nlpProcessing.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.nlpProcessing.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.nlpProcessing.name }}
+        component: nlp
+        {{- with .Values.commonLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      containers:
+        - name: {{ .Values.nlpProcessing.name }}
+          image: {{ include "market-impact.image" (dict "registry" .Values.global.imageRegistry "repository" .Values.nlpProcessing.image.repository "tag" .Values.nlpProcessing.image.tag) }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - containerPort: {{ .Values.nlpProcessing.service.grpcPort }}
+              name: grpc
+              protocol: TCP
+          env:
+            - name: SERVER_GRPC_PORT
+              value: {{ .Values.nlpProcessing.env.serverGrpcPort | quote }}
+            - name: SERVER_ENVIRONMENT
+              value: {{ .Values.nlpProcessing.env.serverEnvironment | quote }}
+
+            # Database Configuration
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.secretName }}
+                  key: host
+            - name: DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.secretName }}
+                  key: port
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.secretName }}
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.secretName }}
+                  key: password
+            - name: DB_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.secretName }}
+                  key: database
+
+            # Redis Configuration
+            - name: REDIS_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.redis.secretName }}
+                  key: host
+            - name: REDIS_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.redis.secretName }}
+                  key: port
+                  optional: true
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.redis.secretName }}
+                  key: password
+                  optional: true
+
+            # News Ingestion Service
+            - name: NEWS_INGESTION_HOST
+              value: {{ .Values.nlpProcessing.env.newsIngestionHost | quote }}
+            - name: NEWS_INGESTION_PORT
+              value: {{ .Values.nlpProcessing.env.newsIngestionPort | quote }}
+
+          resources:
+            {{- toYaml .Values.nlpProcessing.resources | nindent 12 }}
+
+          livenessProbe:
+            {{- toYaml .Values.nlpProcessing.livenessProbe | nindent 12 }}
+
+          readinessProbe:
+            {{- toYaml .Values.nlpProcessing.readinessProbe | nindent 12 }}
+{{- end }}

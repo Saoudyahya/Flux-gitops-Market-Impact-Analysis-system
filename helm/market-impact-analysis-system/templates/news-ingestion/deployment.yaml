@@ -1,0 +1,112 @@
+{{- if .Values.newsIngestion.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.newsIngestion.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ .Values.newsIngestion.name }}
+    component: ingestion
+    {{- include "market-impact.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.newsIngestion.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.newsIngestion.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.newsIngestion.name }}
+        component: ingestion
+        {{- with .Values.commonLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      containers:
+        - name: {{ .Values.newsIngestion.name }}
+          image: {{ include "market-impact.image" (dict "registry" .Values.global.imageRegistry "repository" .Values.newsIngestion.image.repository "tag" .Values.newsIngestion.image.tag) }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - containerPort: {{ .Values.newsIngestion.service.httpPort }}
+              name: http
+              protocol: TCP
+            - containerPort: {{ .Values.newsIngestion.service.grpcPort }}
+              name: grpc
+              protocol: TCP
+          env:
+            - name: SERVER_HTTP_PORT
+              value: {{ .Values.newsIngestion.env.serverHttpPort | quote }}
+            - name: SERVER_GRPC_PORT
+              value: {{ .Values.newsIngestion.env.serverGrpcPort | quote }}
+            - name: SERVER_ENVIRONMENT
+              value: {{ .Values.newsIngestion.env.serverEnvironment | quote }}
+
+            # Database Configuration
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.secretName }}
+                  key: host
+            - name: DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.secretName }}
+                  key: port
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.secretName }}
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.secretName }}
+                  key: password
+            - name: DB_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.secretName }}
+                  key: database
+
+            # Redis Configuration
+            - name: REDIS_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.redis.secretName }}
+                  key: host
+            - name: REDIS_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.redis.secretName }}
+                  key: port
+                  optional: true
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.redis.secretName }}
+                  key: password
+                  optional: true
+
+            # NewsAPI Configuration
+            - name: NEWSAPI_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.apiKeys.secretName }}
+                  key: newsapi-key
+                  optional: true
+
+            # NLP Service Configuration
+            - name: NLP_PROCESSING_HOST
+              value: {{ .Values.newsIngestion.env.nlpProcessingHost | quote }}
+            - name: NLP_PROCESSING_PORT
+              value: {{ .Values.newsIngestion.env.nlpProcessingPort | quote }}
+
+          resources:
+            {{- toYaml .Values.newsIngestion.resources | nindent 12 }}
+
+          livenessProbe:
+            {{- toYaml .Values.newsIngestion.livenessProbe | nindent 12 }}
+
+          readinessProbe:
+            {{- toYaml .Values.newsIngestion.readinessProbe | nindent 12 }}
+{{- end }}

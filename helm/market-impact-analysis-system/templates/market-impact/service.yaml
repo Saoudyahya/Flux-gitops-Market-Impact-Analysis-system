@@ -1,0 +1,23 @@
+{{- if .Values.marketImpact.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.marketImpact.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ .Values.marketImpact.name }}
+    {{- include "market-impact.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.marketImpact.service.type }}
+  ports:
+    - port: {{ .Values.marketImpact.service.httpPort }}
+      targetPort: {{ .Values.marketImpact.service.httpPort }}
+      protocol: TCP
+      name: http
+    - port: {{ .Values.marketImpact.service.grpcPort }}
+      targetPort: {{ .Values.marketImpact.service.grpcPort }}
+      protocol: TCP
+      name: grpc
+  selector:
+    app: {{ .Values.marketImpact.name }}
+{{- end }}

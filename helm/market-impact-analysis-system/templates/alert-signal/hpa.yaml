@@ -1,0 +1,38 @@
+{{- if and .Values.alertSignal.enabled .Values.alertSignal.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ .Values.alertSignal.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "market-impact.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ .Values.alertSignal.name }}
+  minReplicas: {{ .Values.alertSignal.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.alertSignal.autoscaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.alertSignal.autoscaling.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.alertSignal.autoscaling.targetMemoryUtilizationPercentage }}
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: {{ .Values.alertSignal.autoscaling.scaleDown.stabilizationWindowSeconds }}
+      policies:
+        {{- toYaml .Values.alertSignal.autoscaling.scaleDown.policies | nindent 8 }}
+    scaleUp:
+      stabilizationWindowSeconds: {{ .Values.alertSignal.autoscaling.scaleUp.stabilizationWindowSeconds }}
+      policies:
+        {{- toYaml .Values.alertSignal.autoscaling.scaleUp.policies | nindent 8 }}
+{{- end }}

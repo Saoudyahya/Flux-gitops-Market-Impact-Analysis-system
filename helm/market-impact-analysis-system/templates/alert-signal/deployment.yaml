@@ -1,0 +1,96 @@
+{{- if .Values.alertSignal.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.alertSignal.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ .Values.alertSignal.name }}
+    component: alerts
+    {{- include "market-impact.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.alertSignal.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.alertSignal.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.alertSignal.name }}
+        component: alerts
+        {{- with .Values.commonLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      containers:
+        - name: {{ .Values.alertSignal.name }}
+          image: {{ include "market-impact.image" (dict "registry" .Values.global.imageRegistry "repository" .Values.alertSignal.image.repository "tag" .Values.alertSignal.image.tag) }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - containerPort: {{ .Values.alertSignal.service.httpPort }}
+              name: http
+              protocol: TCP
+            - containerPort: {{ .Values.alertSignal.service.grpcPort }}
+              name: grpc
+              protocol: TCP
+          env:
+            - name: SERVER_PORT
+              value: {{ .Values.alertSignal.env.serverPort | quote }}
+            - name: GRPC_SERVER_PORT
+              value: {{ .Values.alertSignal.env.grpcServerPort | quote }}
+
+            # Database Configuration
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.secretName }}
+                  key: host
+            - name: DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.secretName }}
+                  key: port
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.secretName }}
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.secretName }}
+                  key: password
+            - name: DB_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.secretName }}
+                  key: database
+
+            # Redis Configuration
+            - name: REDIS_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.redis.secretName }}
+                  key: host
+            - name: REDIS_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.redis.secretName }}
+                  key: port
+                  optional: true
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.redis.secretName }}
+                  key: password
+                  optional: true
+
+          resources:
+            {{- toYaml .Values.alertSignal.resources | nindent 12 }}
+
+          livenessProbe:
+            {{- toYaml .Values.alertSignal.livenessProbe | nindent 12 }}
+
+          readinessProbe:
+            {{- toYaml .Values.alertSignal.readinessProbe | nindent 12 }}
+{{- end }}

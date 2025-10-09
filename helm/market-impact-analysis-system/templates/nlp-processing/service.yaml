@@ -1,0 +1,19 @@
+{{- if .Values.nlpProcessing.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.nlpProcessing.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ .Values.nlpProcessing.name }}
+    {{- include "market-impact.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.nlpProcessing.service.type }}
+  ports:
+    - port: {{ .Values.nlpProcessing.service.grpcPort }}
+      targetPort: {{ .Values.nlpProcessing.service.grpcPort }}
+      protocol: TCP
+      name: grpc
+  selector:
+    app: {{ .Values.nlpProcessing.name }}
+{{- end }}

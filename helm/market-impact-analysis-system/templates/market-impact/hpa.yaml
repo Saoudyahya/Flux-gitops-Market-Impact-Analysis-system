@@ -1,0 +1,38 @@
+{{- if and .Values.marketImpact.enabled .Values.marketImpact.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ .Values.marketImpact.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "market-impact.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ .Values.marketImpact.name }}
+  minReplicas: {{ .Values.marketImpact.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.marketImpact.autoscaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.marketImpact.autoscaling.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.marketImpact.autoscaling.targetMemoryUtilizationPercentage }}
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: {{ .Values.marketImpact.autoscaling.scaleDown.stabilizationWindowSeconds }}
+      policies:
+        {{- toYaml .Values.marketImpact.autoscaling.scaleDown.policies | nindent 8 }}
+    scaleUp:
+      stabilizationWindowSeconds: {{ .Values.marketImpact.autoscaling.scaleUp.stabilizationWindowSeconds }}
+      policies:
+        {{- toYaml .Values.marketImpact.autoscaling.scaleUp.policies | nindent 8 }}
+{{- end }}

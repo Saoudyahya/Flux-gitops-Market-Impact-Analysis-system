@@ -1,0 +1,82 @@
+# Production environment values
+global:
+  namespace: financial-news
+  environment: production
+  imageRegistry: your-registry
+  imagePullPolicy: IfNotPresent
+
+commonLabels:
+  environment: production
+  managed-by: helm
+
+alertSignal:
+  replicaCount: 3
+
+  image:
+    tag: v1.0.0
+
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "200m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
+
+  autoscaling:
+    minReplicas: 3
+    maxReplicas: 8
+
+marketImpact:
+  replicaCount: 3
+
+  image:
+    tag: v1.0.0
+
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "500m"
+    limits:
+      memory: "2Gi"
+      cpu: "1500m"
+
+  autoscaling:
+    minReplicas: 3
+    maxReplicas: 8
+
+newsIngestion:
+  replicaCount: 3
+
+  image:
+    tag: v1.0.0
+
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "500m"
+    limits:
+      memory: "2Gi"
+      cpu: "1500m"
+
+  autoscaling:
+    minReplicas: 3
+    maxReplicas: 8
+
+nlpProcessing:
+  replicaCount: 5
+
+  image:
+    tag: v1.0.0
+
+  resources:
+    requests:
+      memory: "2Gi"
+      cpu: "1000m"
+    limits:
+      memory: "4Gi"
+      cpu: "3000m"
+
+  autoscaling:
+    minReplicas: 5
+    maxReplicas: 15
