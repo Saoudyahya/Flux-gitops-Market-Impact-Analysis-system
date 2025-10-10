@@ -41,7 +41,7 @@ alertSignal:
 
   image:
     repository: market-impact-analysis-system-alert-signal-service
-    tag: latest
+    tag: 26
 
   service:
     type: ClusterIP
