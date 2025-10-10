@@ -1,13 +1,14 @@
-# infrastructure/istio/istiod.yaml
-apiVersion: helm.toolkit.fluxcd.io/v2beta1
+apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: istiod
-  namespace: istio-system
+  namespace: flux-system
 spec:
   interval: 30m
+  targetNamespace: istio-system
   dependsOn:
     - name: istio-base
+      namespace: flux-system
   chart:
     spec:
       chart: istiod
@@ -16,6 +17,12 @@ spec:
         kind: HelmRepository
         name: istio
         namespace: flux-system
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
   values:
     pilot:
       resources:
