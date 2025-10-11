@@ -8,7 +8,6 @@ appVersion: "1.0.0"
 keywords:
   - financial-news
   - market-analysis
-  - infrastructure
   - microservices
 
 maintainers:
