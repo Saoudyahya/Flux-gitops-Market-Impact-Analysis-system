@@ -34,6 +34,7 @@ spec:
               name: grpc
               protocol: TCP
           env:
+            # Server Configuration
             - name: SERVER_HTTP_PORT
               value: {{ .Values.newsIngestion.env.serverHttpPort | quote }}
             - name: SERVER_GRPC_PORT
@@ -41,34 +42,61 @@ spec:
             - name: SERVER_ENVIRONMENT
               value: {{ .Values.newsIngestion.env.serverEnvironment | quote }}
 
-            # Database Configuration
-            - name: DB_HOST
+            # PostgreSQL Configuration (Go format)
+            - name: POSTGRES_HOST
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.database.secretName }}
                   key: host
-            - name: DB_PORT
+            - name: POSTGRES_PORT
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.database.secretName }}
                   key: port
-            - name: DB_USERNAME
+            - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.database.secretName }}
                   key: username
-            - name: DB_PASSWORD
+            - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.database.secretName }}
                   key: password
-            - name: DB_DATABASE
+            - name: POSTGRES_DB
               valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.database.secretName }}
-                  key: database
+                configMapKeyRef:
+                  name: db-config
+                  key: NEWS_INGESTION_DB
 
-            # Redis Configuration
+            # Database Connection Pool Settings (Go format)
+            - name: DATABASE_SSL_MODE
+              valueFrom:
+                configMapKeyRef:
+                  name: db-config
+                  key: DATABASE_SSL_MODE
+            - name: DATABASE_MAX_OPEN_CONNS
+              valueFrom:
+                configMapKeyRef:
+                  name: db-config
+                  key: DATABASE_MAX_OPEN_CONNS_NEWS
+            - name: DATABASE_MAX_IDLE_CONNS
+              valueFrom:
+                configMapKeyRef:
+                  name: db-config
+                  key: DATABASE_MAX_IDLE_CONNS_NEWS
+            - name: DATABASE_CONN_MAX_LIFETIME
+              valueFrom:
+                configMapKeyRef:
+                  name: db-config
+                  key: DATABASE_CONN_MAX_LIFETIME_NEWS
+            - name: DATABASE_CONN_MAX_IDLE_TIME
+              valueFrom:
+                configMapKeyRef:
+                  name: db-config
+                  key: DATABASE_CONN_MAX_IDLE_TIME_NEWS
+
+            # Redis Configuration (Go format)
             - name: REDIS_HOST
               valueFrom:
                 secretKeyRef:
@@ -76,16 +104,20 @@ spec:
                   key: host
             - name: REDIS_PORT
               valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.redis.secretName }}
-                  key: port
-                  optional: true
+                configMapKeyRef:
+                  name: redis-config
+                  key: REDIS_PORT
             - name: REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.redis.secretName }}
                   key: password
                   optional: true
+            - name: REDIS_DATABASE
+              valueFrom:
+                configMapKeyRef:
+                  name: redis-config
+                  key: REDIS_DATABASE_NEWS_INGESTION
 
             # NewsAPI Configuration
             - name: NEWSAPI_KEY
@@ -95,7 +127,7 @@ spec:
                   key: newsapi-key
                   optional: true
 
-            # NLP Service Configuration
+            # Service Dependencies
             - name: NLP_PROCESSING_HOST
               value: {{ .Values.newsIngestion.env.nlpProcessingHost | quote }}
             - name: NLP_PROCESSING_PORT

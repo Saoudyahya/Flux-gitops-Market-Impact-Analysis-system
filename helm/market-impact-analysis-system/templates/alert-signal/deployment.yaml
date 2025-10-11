@@ -34,12 +34,13 @@ spec:
               name: grpc
               protocol: TCP
           env:
+            # Server Configuration
             - name: SERVER_PORT
               value: {{ .Values.alertSignal.env.serverPort | quote }}
             - name: GRPC_SERVER_PORT
               value: {{ .Values.alertSignal.env.grpcServerPort | quote }}
 
-            # Database Configuration
+            # Database Configuration (Spring Boot format)
             - name: DB_HOST
               valueFrom:
                 secretKeyRef:
@@ -62,11 +63,38 @@ spec:
                   key: password
             - name: DB_DATABASE
               valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.database.secretName }}
-                  key: database
+                configMapKeyRef:
+                  name: db-config
+                  key: ALERTSIGNAL_DB
+            - name: DB_SCHEMA
+              valueFrom:
+                configMapKeyRef:
+                  name: db-config
+                  key: DB_SCHEMA
 
-            # Redis Configuration
+            # Connection Pool Settings (Spring Boot format)
+            - name: DB_POOL_MIN_SIZE
+              valueFrom:
+                configMapKeyRef:
+                  name: db-config
+                  key: DB_POOL_MIN_SIZE
+            - name: DB_POOL_MAX_SIZE
+              valueFrom:
+                configMapKeyRef:
+                  name: db-config
+                  key: DB_POOL_MAX_SIZE
+            - name: DB_CONNECTION_TIMEOUT
+              valueFrom:
+                configMapKeyRef:
+                  name: db-config
+                  key: DB_CONNECTION_TIMEOUT
+            - name: DB_IDLE_TIMEOUT
+              valueFrom:
+                configMapKeyRef:
+                  name: db-config
+                  key: DB_IDLE_TIMEOUT
+
+            # Redis Configuration (Spring Boot format)
             - name: REDIS_HOST
               valueFrom:
                 secretKeyRef:
@@ -74,16 +102,44 @@ spec:
                   key: host
             - name: REDIS_PORT
               valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.redis.secretName }}
-                  key: port
-                  optional: true
+                configMapKeyRef:
+                  name: redis-config
+                  key: REDIS_PORT
             - name: REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.redis.secretName }}
                   key: password
                   optional: true
+
+            # Redis Pool Settings (Spring Boot format)
+            - name: REDIS_TIMEOUT
+              valueFrom:
+                configMapKeyRef:
+                  name: redis-config
+                  key: REDIS_TIMEOUT
+            - name: REDIS_POOL_MAX_ACTIVE
+              valueFrom:
+                configMapKeyRef:
+                  name: redis-config
+                  key: REDIS_POOL_MAX_ACTIVE
+            - name: REDIS_POOL_MAX_IDLE
+              valueFrom:
+                configMapKeyRef:
+                  name: redis-config
+                  key: REDIS_POOL_MAX_IDLE
+            - name: REDIS_POOL_MIN_IDLE
+              valueFrom:
+                configMapKeyRef:
+                  name: redis-config
+                  key: REDIS_POOL_MIN_IDLE
+
+            # Redis Database Number
+            - name: REDIS_DATABASE
+              valueFrom:
+                configMapKeyRef:
+                  name: redis-config
+                  key: REDIS_DATABASE_ALERT_SIGNAL
 
           resources:
             {{- toYaml .Values.alertSignal.resources | nindent 12 }}

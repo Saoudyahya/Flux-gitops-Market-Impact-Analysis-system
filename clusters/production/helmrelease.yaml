@@ -33,8 +33,12 @@ spec:
     commonLabels:
       environment: production
       managed-by: flux
-
-    $138 version
+    alertSignal:
+      enabled: true
+      replicaCount: 2
+      image:
+        repository: market-impact-analysis-system-alert-signal-service
+        tag: 33
       resources:
         requests:
           memory: "256Mi"
@@ -52,7 +56,7 @@ spec:
       replicaCount: 2
       image:
         repository: market-impact-analysis-system-market-impact-service
-        tag: latest
+        tag: 2
       resources:
         requests:
           memory: "512Mi"
@@ -70,7 +74,7 @@ spec:
       replicaCount: 2
       image:
         repository: market-impact-analysis-system-news-ingestion-service
-        tag: latest
+        tag: 2
       resources:
         requests:
           memory: "512Mi"
@@ -88,7 +92,7 @@ spec:
       replicaCount: 3
       image:
         repository: market-impact-analysis-system-nlp-processing-service
-        tag: latest
+        tag: 2
       resources:
         requests:
           memory: "1Gi"

@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: db-config
+  namespace: financial-news
+data:
+  # Database names for each service
+  ALERTSIGNAL_DB: "alertsignal_db"
+  NLP_PROCESSING_DB: "nlp_processing"
+  NEWS_INGESTION_DB: "news_ingestion"
+  MARKET_IMPACT_DB: "market_impact"
+
+  # Database schema
+  DB_SCHEMA: "public"
+
+  # Java/Spring Boot Connection Pool Settings
+  DB_POOL_MIN_SIZE: "5"
+  DB_POOL_MAX_SIZE: "20"
+  DB_CONNECTION_TIMEOUT: "60000"
+  DB_IDLE_TIMEOUT: "300000"
+
+  # Go Service Database Connection Pool Settings
+  DATABASE_SSL_MODE: "disable"
+  DATABASE_MAX_OPEN_CONNS_NEWS: "25"
+  DATABASE_MAX_IDLE_CONNS_NEWS: "5"
+  DATABASE_CONN_MAX_LIFETIME_NEWS: "5m"
+  DATABASE_CONN_MAX_IDLE_TIME_NEWS: "1m"
+
+  DATABASE_MAX_OPEN_CONNS_NLP: "30"
+  DATABASE_MAX_IDLE_CONNS_NLP: "10"
+  DATABASE_CONN_MAX_LIFETIME_NLP: "5m"
+  DATABASE_CONN_MAX_IDLE_TIME_NLP: "2m"
