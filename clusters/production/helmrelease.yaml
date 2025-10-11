@@ -34,12 +34,7 @@ spec:
       environment: production
       managed-by: flux
 
-    alertSignal:
-      enabled: true
-      replicaCount: 2
-      image:
-        repository: market-impact-analysis-system-alert-signal-service
-        tag: 33
+    $138 version
       resources:
         requests:
           memory: "256Mi"
