@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-config
+  namespace: financial-news
+data:
+  # Spring Boot Redis Settings
+  REDIS_PORT: "6379"
+  REDIS_TIMEOUT: "2000"
+  REDIS_POOL_MAX_ACTIVE: "20"
+  REDIS_POOL_MAX_IDLE: "8"
+  REDIS_POOL_MIN_IDLE: "2"
+
+  # Go Service Redis Database Numbers (logical databases)
+  REDIS_DATABASE_NEWS_INGESTION: "0"
+  REDIS_DATABASE_NLP_PROCESSING: "1"
+  REDIS_DATABASE_MARKET_IMPACT: "2"
+  REDIS_DATABASE_ALERT_SIGNAL: "3"
