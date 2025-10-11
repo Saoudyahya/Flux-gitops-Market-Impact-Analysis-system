@@ -1,4 +1,4 @@
-apiVersion: helm.toolkit.fluxcd.io/v2
+﻿apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: market-impact-analysis-system
@@ -38,7 +38,7 @@ spec:
       replicaCount: 2
       image:
         repository: market-impact-analysis-system-alert-signal-service
-        tag: 14
+        tag: "34"
       resources:
         requests:
           memory: "256Mi"
