@@ -34,6 +34,7 @@ spec:
               name: grpc
               protocol: TCP
           env:
+            # Server Configuration
             - name: SERVER_PORT
               value: {{ .Values.marketImpact.env.serverPort | quote }}
             - name: SERVER_CONTEXT_PATH
@@ -41,7 +42,7 @@ spec:
             - name: GRPC_SERVER_PORT
               value: {{ .Values.marketImpact.env.grpcServerPort | quote }}
 
-            # Database Configuration
+            # Database Configuration (Spring Boot format)
             - name: DB_HOST
               valueFrom:
                 secretKeyRef:
@@ -64,11 +65,16 @@ spec:
                   key: password
             - name: DB_DATABASE
               valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.database.secretName }}
-                  key: database
+                configMapKeyRef:
+                  name: db-config
+                  key: MARKET_IMPACT_DB
+            - name: DB_SCHEMA
+              valueFrom:
+                configMapKeyRef:
+                  name: db-config
+                  key: DB_SCHEMA
 
-            # Redis Configuration
+            # Redis Configuration (Spring Boot format)
             - name: REDIS_HOST
               valueFrom:
                 secretKeyRef:
@@ -76,30 +82,30 @@ spec:
                   key: host
             - name: REDIS_PORT
               valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.redis.secretName }}
-                  key: port
-                  optional: true
+                configMapKeyRef:
+                  name: redis-config
+                  key: REDIS_PORT
             - name: REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.redis.secretName }}
                   key: password
                   optional: true
+            - name: REDIS_DATABASE
+              valueFrom:
+                configMapKeyRef:
+                  name: redis-config
+                  key: REDIS_DATABASE_MARKET_IMPACT
 
-            # NLP Processing Service
+            # Service Dependencies
             - name: NLP_PROCESSING_HOST
               value: {{ .Values.marketImpact.env.nlpProcessingHost | quote }}
             - name: NLP_PROCESSING_PORT
               value: {{ .Values.marketImpact.env.nlpProcessingPort | quote }}
-
-            # News Ingestion Service
             - name: NEWS_INGESTION_HOST
               value: {{ .Values.marketImpact.env.newsIngestionHost | quote }}
             - name: NEWS_INGESTION_PORT
               value: {{ .Values.marketImpact.env.newsIngestionPort | quote }}
-
-            # Alert Signal Service
             - name: ALERT_SIGNAL_HOST
               value: {{ .Values.marketImpact.env.alertSignalHost | quote }}
             - name: ALERT_SIGNAL_PORT
