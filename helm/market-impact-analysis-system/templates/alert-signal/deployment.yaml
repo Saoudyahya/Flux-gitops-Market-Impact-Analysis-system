@@ -96,10 +96,7 @@ spec:
 
             # Redis Configuration (Spring Boot format)
             - name: REDIS_HOST
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.redis.secretName }}
-                  key: host
+              value: {{ .Values.alertSignal.redis.host | default "host.docker.internal" }}
             - name: REDIS_PORT
               valueFrom:
                 configMapKeyRef:
