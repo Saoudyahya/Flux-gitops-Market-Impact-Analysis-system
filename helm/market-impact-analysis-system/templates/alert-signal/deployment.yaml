@@ -95,8 +95,12 @@ spec:
                   key: DB_IDLE_TIMEOUT
 
             # Redis Configuration (Spring Boot format)
+            # FIXED: Get Redis host from secret instead of non-existent values
             - name: REDIS_HOST
-              value: {{ .Values.alertSignal.redis.host | default "host.docker.internal" }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.redis.secretName }}
+                  key: host
             - name: REDIS_PORT
               valueFrom:
                 configMapKeyRef:
