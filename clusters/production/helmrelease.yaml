@@ -35,7 +35,7 @@ spec:
       managed-by: flux
     alertSignal:
       enabled: true
-      replicaCount: 2
+      replicaCount: 1
       image:
         repository: market-impact-analysis-system-alert-signal-service
         tag: "50"
@@ -48,12 +48,12 @@ spec:
           cpu: "500m"
       autoscaling:
         enabled: true
-        minReplicas: 2
+        minReplicas: 1
         maxReplicas: 5
 
     marketImpact:
       enabled: true
-      replicaCount: 2
+      replicaCount: 1
       image:
         repository: market-impact-analysis-system-market-impact-service
         tag: "3"
@@ -66,12 +66,12 @@ spec:
           cpu: "1000m"
       autoscaling:
         enabled: true
-        minReplicas: 2
+        minReplicas: 1
         maxReplicas: 5
 
     newsIngestion:
       enabled: true
-      replicaCount: 2
+      replicaCount: 1
       image:
         repository: market-impact-analysis-system-news-ingestion-service
         tag: "2"
@@ -84,12 +84,12 @@ spec:
           cpu: "1000m"
       autoscaling:
         enabled: true
-        minReplicas: 2
+        minReplicas: 1
         maxReplicas: 5
 
     nlpProcessing:
       enabled: true
-      replicaCount: 3
+      replicaCount: 1
       image:
         repository: market-impact-analysis-system-nlp-processing-service
         tag: "1"
@@ -102,7 +102,7 @@ spec:
           cpu: "2000m"
       autoscaling:
         enabled: true
-        minReplicas: 3
+        minReplicas: 1
         maxReplicas: 10
 
   targetNamespace: financial-news
