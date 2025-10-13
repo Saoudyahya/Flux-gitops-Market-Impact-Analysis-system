@@ -9,9 +9,10 @@ data:
   NLP_PROCESSING_DB: "nlp_processing"
   NEWS_INGESTION_DB: "news_ingestion"
   MARKET_IMPACT_DB: "market_impact"
-
-  # Database schema
   DB_SCHEMA: "public"
+
+  # FIXED: Enable SSL for AWS RDS
+  DATABASE_SSL_MODE: "require"  # Changed from "disable" to "require"
 
   # Java/Spring Boot Connection Pool Settings
   DB_POOL_MIN_SIZE: "5"
@@ -20,7 +21,6 @@ data:
   DB_IDLE_TIMEOUT: "300000"
 
   # Go Service Database Connection Pool Settings
-  DATABASE_SSL_MODE: "disable"
   DATABASE_MAX_OPEN_CONNS_NEWS: "25"
   DATABASE_MAX_IDLE_CONNS_NEWS: "5"
   DATABASE_CONN_MAX_LIFETIME_NEWS: "5m"
