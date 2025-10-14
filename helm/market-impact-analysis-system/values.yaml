@@ -264,23 +264,24 @@ nlpProcessing:
       cpu: "2000m"
 
 
+
   livenessProbe:
     httpGet:
       path: /health
       port: 8080
-    initialDelaySeconds: 180  # ✅ Increased from 150
+    initialDelaySeconds: 300  # ✅ Increased from 180
     periodSeconds: 10
     timeoutSeconds: 5
-    failureThreshold: 5  # ✅ Increased from 3
+    failureThreshold: 5
 
   readinessProbe:
     httpGet:
       path: /ready
       port: 8080
-    initialDelaySeconds: 150  # ✅ Increased from 120
+    initialDelaySeconds: 250  # ✅ Increased from 150
     periodSeconds: 10
     timeoutSeconds: 5
-    failureThreshold: 5  # ✅ Increased from 3
+    failureThreshold: 5
 
   autoscaling:
     enabled: true
