@@ -200,7 +200,7 @@ newsIngestion:
     httpGet:
       path: /health
       port: 4001
-    initialDelaySeconds: 30
+    initialDelaySeconds: 90
     periodSeconds: 10
     timeoutSeconds: 5
     failureThreshold: 3
@@ -209,7 +209,7 @@ newsIngestion:
     httpGet:
       path: /health
       port: 4001
-    initialDelaySeconds: 10
+    initialDelaySeconds: 60
     periodSeconds: 5
     timeoutSeconds: 3
     failureThreshold: 3
