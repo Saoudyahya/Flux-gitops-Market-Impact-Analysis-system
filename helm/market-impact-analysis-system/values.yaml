@@ -130,10 +130,9 @@ marketImpact:
     limits:
       memory: "1Gi"
       cpu: "1000m"
-
   livenessProbe:
     httpGet:
-      path: /market-impact/actuator/health
+      path: /market-impact/actuator/health/liveness  # ✅ More specific
       port: 8082
     initialDelaySeconds: 60
     periodSeconds: 10
@@ -142,13 +141,12 @@ marketImpact:
 
   readinessProbe:
     httpGet:
-      path: /market-impact/actuator/health
+      path: /market-impact/actuator/health/readiness  # ✅ More specific
       port: 8082
     initialDelaySeconds: 30
     periodSeconds: 5
     timeoutSeconds: 3
     failureThreshold: 3
-
   autoscaling:
     enabled: true
     minReplicas: 2
