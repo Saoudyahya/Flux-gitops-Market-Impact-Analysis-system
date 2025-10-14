@@ -38,7 +38,7 @@ spec:
       replicaCount: 1
       image:
         repository: market-impact-analysis-system-alert-signal-service
-        tag: "50"
+        tag: "36"
       resources:
         requests:
           memory: "256Mi"
@@ -56,7 +56,7 @@ spec:
       replicaCount: 1
       image:
         repository: market-impact-analysis-system-market-impact-service
-        tag: "3"
+        tag: "6"
       resources:
         requests:
           memory: "512Mi"
@@ -74,11 +74,11 @@ spec:
       replicaCount: 1
       image:
         repository: market-impact-analysis-system-news-ingestion-service
-        tag: "2"
+        tag: "5"
       resources:
         requests:
-          memory: "512Mi"
-          cpu: "250m"
+          memory: "1Gi"
+          cpu: "750m"
         limits:
           memory: "1Gi"
           cpu: "1000m"
