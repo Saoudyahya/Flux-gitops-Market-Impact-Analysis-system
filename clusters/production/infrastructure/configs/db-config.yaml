@@ -30,3 +30,4 @@ data:
   DATABASE_MAX_IDLE_CONNS_NLP: "10"
   DATABASE_CONN_MAX_LIFETIME_NLP: "5m"
   DATABASE_CONN_MAX_IDLE_TIME_NLP: "2m"
+  NLP_PROCESSING_HOST: "nlp-processing.financial-news.svc.cluster.local"
