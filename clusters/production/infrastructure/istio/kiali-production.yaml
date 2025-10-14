@@ -1,0 +1,85 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: kiali-server
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: istio-system
+  dependsOn:
+    - name: istiod
+      namespace: flux-system
+  chart:
+    spec:
+      chart: kiali-server
+      version: 2.2.0
+      sourceRef:
+        kind: HelmRepository
+        name: kiali
+        namespace: flux-system
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    deployment:
+      replicas: 1
+      resources:
+        requests:
+          cpu: 200m
+          memory: 256Mi
+        limits:
+          cpu: 1000m
+          memory: 1Gi
+
+      # Security context
+      security_context:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+
+    # Auth with token (more secure for production)
+    auth:
+      strategy: "token"
+
+    login_token:
+      signing_key: "CHANGE_THIS_SIGNING_KEY_TO_SOMETHING_SECURE"  # Change this!
+      expiration_seconds: 86400  # 24 hours
+
+    external_services:
+      prometheus:
+        url: "http://prometheus-server.monitoring.svc.cluster.local:80"
+      grafana:
+        enabled: true
+        in_cluster_url: "http://grafana.monitoring.svc.cluster.local:80"
+        url: "http://grafana.monitoring.svc.cluster.local:80"
+
+    server:
+      web_root: "/"
+      web_port: 20001
+      metrics_enabled: true
+      metrics_port: 9090
+
+    istio_namespace: "istio-system"
+
+    kiali_feature_flags:
+      istio_injection_action: true
+      istio_upgrade_action: false
+      ui_defaults:
+        metrics_per_refresh: "1m"
+        refresh_interval: "60s"
+
+    # Health checks
+    health_config:
+      rate:
+        - namespace: ".*"
+          kind: ".*"
+          name: ".*"
+          tolerance:
+            - code: "^5\\d\\d$"
+              direction: ".*"
+              protocol: "http"
+              degraded: 0
+              failure: 10
