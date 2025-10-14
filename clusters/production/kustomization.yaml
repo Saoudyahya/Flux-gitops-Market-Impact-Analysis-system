@@ -5,4 +5,6 @@ resources:
   - infrastructure/istio    # Then Istio
   - infrastructure/secrets  # Then secrets
   - infrastructure/configs  # Then configs
-  - helmrelease.yaml        # Finally the application
+  - helmrelease.yaml
+  - infrastructure/monitoring  # ✅ Add this line
+# Finally the application

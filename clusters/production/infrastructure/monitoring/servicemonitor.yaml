@@ -1,0 +1,21 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: financial-news-services
+  namespace: monitoring
+  labels:
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      managed-by: helm  # Matches your commonLabels
+  namespaceSelector:
+    matchNames:
+      - financial-news
+  endpoints:
+    - port: http
+      interval: 30s
+      path: /actuator/prometheus  # For Spring Boot services
+    - port: http
+      interval: 30s
+      path: /metrics  # For Go services
