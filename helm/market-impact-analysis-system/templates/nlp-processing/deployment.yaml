@@ -30,10 +30,15 @@ spec:
             - containerPort: {{ .Values.nlpProcessing.service.grpcPort }}
               name: grpc
               protocol: TCP
+            - containerPort: {{ .Values.nlpProcessing.service.httpPort }}
+              name: http
+              protocol: TCP
           env:
             # Server Configuration
             - name: SERVER_GRPC_PORT
               value: {{ .Values.nlpProcessing.env.serverGrpcPort | quote }}
+            - name: SERVER_HTTP_PORT
+              value: {{ .Values.nlpProcessing.env.serverHttpPort | quote }}
             - name: SERVER_ENVIRONMENT
               value: {{ .Values.nlpProcessing.env.serverEnvironment | quote }}
 
