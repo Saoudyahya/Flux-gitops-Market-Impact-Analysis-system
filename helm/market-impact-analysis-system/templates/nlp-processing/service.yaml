@@ -14,6 +14,10 @@ spec:
       targetPort: {{ .Values.nlpProcessing.service.grpcPort }}
       protocol: TCP
       name: grpc
+    - port: {{ .Values.nlpProcessing.service.httpPort }}
+      targetPort: {{ .Values.nlpProcessing.service.httpPort }}
+      protocol: TCP
+      name: http
   selector:
     app: {{ .Values.nlpProcessing.name }}
 {{- end }}
