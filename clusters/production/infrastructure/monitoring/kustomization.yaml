@@ -4,4 +4,6 @@ resources:
   - namespace.yaml
   - prometheus-helmrepository.yaml
   - prometheus.yaml
+  # - servicemonitor.yaml
+
 #  - servicemonitor.yaml
