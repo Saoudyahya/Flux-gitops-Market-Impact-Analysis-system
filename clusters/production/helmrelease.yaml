@@ -5,6 +5,8 @@ metadata:
   namespace: flux-system
 spec:
   interval: 5m0s
+
+
   chart:
     spec:
       chart: ./helm/market-impact-analysis-system
