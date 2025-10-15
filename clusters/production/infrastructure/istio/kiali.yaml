@@ -9,6 +9,8 @@ spec:
   dependsOn:
     - name: istiod
       namespace: flux-system
+    - name: kube-prometheus-stack  # ✅ Update name
+      namespace: flux-system
   chart:
     spec:
       chart: kiali-server
@@ -36,17 +38,14 @@ spec:
           memory: 512Mi
 
     # External services configuration
+    # In kiali-production.yaml or kiali.yaml
     external_services:
       prometheus:
-        url: "http://prometheus-server.monitoring.svc.cluster.local:80"
+        url: "http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090"  # ✅ Updated
       grafana:
         enabled: true
-        in_cluster_url: "http://grafana.monitoring.svc.cluster.local:80"
-        url: "http://grafana.monitoring.svc.cluster.local:80"
-      tracing:
-        enabled: false
-        in_cluster_url: "http://jaeger-query.tracing.svc.cluster.local:16686"
-        url: "http://jaeger-query.tracing.svc.cluster.local:16686"
+        in_cluster_url: "http://kube-prometheus-stack-grafana.monitoring.svc.cluster.local:80"  # ✅ Updated
+        url: "http://kube-prometheus-stack-grafana.monitoring.svc.cluster.local:80"
 
     # Auth configuration
     auth:

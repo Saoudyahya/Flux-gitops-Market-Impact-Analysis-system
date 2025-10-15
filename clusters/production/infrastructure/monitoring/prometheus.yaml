@@ -1,141 +1,155 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: prometheus
+  name: kube-prometheus-stack
   namespace: flux-system
 spec:
   interval: 30m
   targetNamespace: monitoring
   chart:
     spec:
-      chart: prometheus
-      version: 25.27.0
+      chart: kube-prometheus-stack
+      version: 65.0.0  # Latest stable version
       sourceRef:
         kind: HelmRepository
         name: prometheus-community
         namespace: flux-system
   install:
     createNamespace: true
+    crds: CreateReplace
     remediation:
       retries: 3
   upgrade:
+    crds: CreateReplace
     remediation:
       retries: 3
   values:
-    # Prometheus Server Configuration
-    server:
+    # Prometheus Configuration
+    prometheus:
       enabled: true
-      replicaCount: 1
+      prometheusSpec:
+        replicas: 1
+        retention: 15d
+        retentionSize: "18GB"
 
-      # Resources
-      resources:
-        requests:
-          cpu: 500m
-          memory: 512Mi
-        limits:
-          cpu: 2000m
-          memory: 2Gi
+        resources:
+          requests:
+            cpu: 500m
+            memory: 512Mi
+          limits:
+            cpu: 2000m
+            memory: 2Gi
 
-      # Persistence
-      persistentVolume:
-        enabled: true
-        size: 20Gi
-        storageClass: ""  # Use default storage class
+        storageSpec:
+          volumeClaimTemplate:
+            spec:
+              accessModes: ["ReadWriteOnce"]
+              resources:
+                requests:
+                  storage: 20Gi
 
-      # Retention
-      retention: "15d"
+        # Service Monitor Selector - will auto-discover ServiceMonitors
+        serviceMonitorSelectorNilUsesHelmValues: false
+        serviceMonitorSelector: {}
 
-      # Service
+        # Add Istio scrape configs
+        additionalScrapeConfigs:
+          - job_name: 'istiod'
+            kubernetes_sd_configs:
+              - role: endpoints
+                namespaces:
+                  names:
+                    - istio-system
+            relabel_configs:
+              - source_labels: [__meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+                action: keep
+                regex: istiod;http-monitoring
+
+          - job_name: 'envoy-stats'
+            metrics_path: /stats/prometheus
+            kubernetes_sd_configs:
+              - role: pod
+            relabel_configs:
+              - source_labels: [__meta_kubernetes_pod_container_port_name]
+                action: keep
+                regex: '.*-envoy-prom'
+              - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+                action: replace
+                regex: ([^:]+)(?::\d+)?;(\d+)
+                replacement: $1:15020
+                target_label: __address__
+              - action: labelmap
+                regex: __meta_kubernetes_pod_label_(.+)
+              - source_labels: [__meta_kubernetes_namespace]
+                action: replace
+                target_label: namespace
+              - source_labels: [__meta_kubernetes_pod_name]
+                action: replace
+                target_label: pod_name
+
+    # Grafana Configuration (included in stack)
+    grafana:
+      enabled: true
+      adminPassword: "admin"  # CHANGE THIS IN PRODUCTION!
+
       service:
         type: ClusterIP
-        servicePort: 80
+        port: 80
 
-      # Global scrape configs
-      global:
-        scrape_interval: 30s
-        scrape_timeout: 10s
-        evaluation_interval: 30s
-
-      # Additional scrape configs for Istio
-      additionalScrapeConfigs:
-        - job_name: 'istiod'
-          kubernetes_sd_configs:
-            - role: endpoints
-              namespaces:
-                names:
-                  - istio-system
-          relabel_configs:
-            - source_labels: [__meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
-              action: keep
-              regex: istiod;http-monitoring
-
-        - job_name: 'envoy-stats'
-          metrics_path: /stats/prometheus
-          kubernetes_sd_configs:
-            - role: pod
-          relabel_configs:
-            - source_labels: [__meta_kubernetes_pod_container_port_name]
-              action: keep
-              regex: '.*-envoy-prom'
-            - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
-              action: replace
-              regex: ([^:]+)(?::\d+)?;(\d+)
-              replacement: $1:15020
-              target_label: __address__
-            - action: labelmap
-              regex: __meta_kubernetes_pod_label_(.+)
-            - source_labels: [__meta_kubernetes_namespace]
-              action: replace
-              target_label: namespace
-            - source_labels: [__meta_kubernetes_pod_name]
-              action: replace
-              target_label: pod_name
-
-    # AlertManager (Optional - for alerts)
-    alertmanager:
-      enabled: false
-      persistentVolume:
-        enabled: false
-
-    # Pushgateway (Optional - for batch jobs)
-    pushgateway:
-      enabled: false
-
-    # Node Exporter (for node metrics)
-    nodeExporter:
-      enabled: true
       resources:
         requests:
           cpu: 100m
-          memory: 30Mi
+          memory: 128Mi
         limits:
           cpu: 200m
-          memory: 50Mi
+          memory: 256Mi
 
-    # Kube State Metrics (for Kubernetes resource metrics)
-    kube-state-metrics:
+      # Pre-configured dashboards for Istio
+      dashboardProviders:
+        dashboardproviders.yaml:
+          apiVersion: 1
+          providers:
+            - name: 'istio'
+              orgId: 1
+              folder: 'Istio'
+              type: file
+              disableDeletion: false
+              editable: true
+              options:
+                path: /var/lib/grafana/dashboards/istio
+
+    # AlertManager (optional)
+    alertmanager:
+      enabled: true
+      alertmanagerSpec:
+        replicas: 1
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+          limits:
+            cpu: 50m
+            memory: 64Mi
+
+    # Node Exporter
+    nodeExporter:
+      enabled: true
+
+    # Kube State Metrics
+    kubeStateMetrics:
+      enabled: true
+
+    # Default Service Monitors
+    defaultRules:
+      create: true
+
+    # Prometheus Operator
+    prometheusOperator:
       enabled: true
       resources:
         requests:
-          cpu: 10m
-          memory: 32Mi
-        limits:
           cpu: 100m
-          memory: 64Mi
-
-    # Service monitors for automatic discovery
-    serviceMonitors:
-      enabled: true
-
-    # Prometheus Operator CRDs
-    prometheus-node-exporter:
-      hostRootFsMount:
-        enabled: true
-
-    # RBAC
-    rbac:
-      create: true
-
-    serviceAccount:
-      create: true
-      name: prometheus-server
+          memory: 128Mi
+        limits:
+          cpu: 200m
+          memory: 256Mi

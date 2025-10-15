@@ -1,21 +1,22 @@
+# clusters/production/infrastructure/monitoring/servicemonitor.yaml
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: financial-news-services
   namespace: monitoring
   labels:
-    release: prometheus
+    release: kube-prometheus-stack  # ✅ Update to match new release name
 spec:
   selector:
     matchLabels:
-      managed-by: helm  # Matches your commonLabels
+      managed-by: helm
   namespaceSelector:
     matchNames:
       - financial-news
   endpoints:
     - port: http
       interval: 30s
-      path: /actuator/prometheus  # For Spring Boot services
+      path: /actuator/prometheus  # Spring Boot services
     - port: http
       interval: 30s
-      path: /metrics  # For Go services
+      path: /metrics  # Go services
