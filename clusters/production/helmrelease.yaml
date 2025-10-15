@@ -38,7 +38,7 @@ spec:
       replicaCount: 1
       image:
         repository: market-impact-analysis-system-alert-signal-service
-        tag: "36"
+        tag: "52"
       resources:
         requests:
           memory: "256Mi"
