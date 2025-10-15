@@ -9,7 +9,7 @@ spec:
   dependsOn:
     - name: istiod
       namespace: flux-system
-    - name: kube-prometheus-stack  # ✅ Update name
+    - name: kube-prometheus-stack
       namespace: flux-system
   chart:
     spec:
@@ -26,7 +26,6 @@ spec:
     remediation:
       retries: 3
   values:
-    # Deployment configuration
     deployment:
       replicas: 1
       resources:
@@ -37,29 +36,24 @@ spec:
           cpu: 500m
           memory: 512Mi
 
-    # External services configuration
-    # In kiali-production.yaml or kiali.yaml
+    # Fixed Prometheus and Grafana URLs
     external_services:
       prometheus:
-        url: "http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090"  # ✅ Updated
+        url: "http://monitoring-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090"
       grafana:
         enabled: true
-        in_cluster_url: "http://kube-prometheus-stack-grafana.monitoring.svc.cluster.local:80"  # ✅ Updated
-        url: "http://kube-prometheus-stack-grafana.monitoring.svc.cluster.local:80"
+        in_cluster_url: "http://monitoring-kube-prometheus-stack-grafana.monitoring.svc.cluster.local:80"
+        url: "http://monitoring-kube-prometheus-stack-grafana.monitoring.svc.cluster.local:80"
 
-    # Auth configuration
     auth:
-      strategy: "anonymous"  # Change to "token" or "openid" for production
+      strategy: "anonymous"
 
-    # Server configuration
     server:
       web_root: "/kiali"
       web_port: 20001
 
-    # Istio configuration
     istio_namespace: "istio-system"
 
-    # Kiali features
     kiali_feature_flags:
       istio_injection_action: true
       istio_upgrade_action: false

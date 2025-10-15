@@ -5,3 +5,5 @@ resources:
   - prometheus-helmrepository.yaml
   - prometheus.yaml
   # - servicemonitor.yaml
+
+#  - servicemonitor.yaml
