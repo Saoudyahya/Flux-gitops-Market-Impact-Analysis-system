@@ -3,5 +3,8 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - helmrepository.yaml
+  - kiali-helmrepository.yaml  # Add this
   - istio-base.yaml
   - istiod.yaml
+  - kiali.yaml
+#  - kiali-production.yaml # production overrides
