@@ -40,7 +40,7 @@ spec:
             - name: GRPC_SERVER_PORT
               value: {{ .Values.alertSignal.env.grpcServerPort | quote }}
 
-            # Database Configuration (Spring Boot format)
+            # Database Configuration
             - name: DB_HOST
               valueFrom:
                 secretKeyRef:
@@ -71,8 +71,6 @@ spec:
                 configMapKeyRef:
                   name: db-config
                   key: DB_SCHEMA
-
-            # Connection Pool Settings (Spring Boot format)
             - name: DB_POOL_MIN_SIZE
               valueFrom:
                 configMapKeyRef:
@@ -94,8 +92,7 @@ spec:
                   name: db-config
                   key: DB_IDLE_TIMEOUT
 
-            # Redis Configuration (Spring Boot format)
-            # FIXED: Get Redis host from secret instead of non-existent values
+            # Redis Configuration
             - name: REDIS_HOST
               valueFrom:
                 secretKeyRef:
@@ -112,8 +109,6 @@ spec:
                   name: {{ .Values.redis.secretName }}
                   key: password
                   optional: true
-
-            # Redis Pool Settings (Spring Boot format)
             - name: REDIS_TIMEOUT
               valueFrom:
                 configMapKeyRef:
@@ -134,13 +129,21 @@ spec:
                 configMapKeyRef:
                   name: redis-config
                   key: REDIS_POOL_MIN_IDLE
-
-            # Redis Database Number
             - name: REDIS_DATABASE
               valueFrom:
                 configMapKeyRef:
                   name: redis-config
                   key: REDIS_DATABASE_ALERT_SIGNAL
+
+            # ✅ ADD: External Service Dependencies
+            - name: EXTERNAL_SERVICES_MARKET_IMPACT_HOST
+              value: "market-impact.{{ .Values.global.namespace }}.svc.cluster.local"
+            - name: EXTERNAL_SERVICES_MARKET_IMPACT_PORT
+              value: "9090"
+            - name: EXTERNAL_SERVICES_NLP_PROCESSING_HOST
+              value: "nlp-processing.{{ .Values.global.namespace }}.svc.cluster.local"
+            - name: EXTERNAL_SERVICES_NLP_PROCESSING_PORT
+              value: "50052"
 
           resources:
             {{- toYaml .Values.alertSignal.resources | nindent 12 }}
