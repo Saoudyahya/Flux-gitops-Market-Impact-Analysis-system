@@ -127,11 +127,10 @@ spec:
                   key: newsapi-key
                   optional: true
 
-            # Service Dependencies
-            - name: NLP_PROCESSING_HOST
-              value: {{ .Values.newsIngestion.env.nlpProcessingHost | quote }}
-            - name: NLP_PROCESSING_PORT
-              value: {{ .Values.newsIngestion.env.nlpProcessingPort | quote }}
+            # ✅ FIXED: Service Dependencies - NLP Processing
+            # Construct the endpoint from host and port values
+            - name: NLP_SERVICE_ENDPOINT
+              value: "{{ .Values.newsIngestion.env.nlpProcessingHost }}:{{ .Values.newsIngestion.env.nlpProcessingPort }}"
 
           resources:
             {{- toYaml .Values.newsIngestion.resources | nindent 12 }}
