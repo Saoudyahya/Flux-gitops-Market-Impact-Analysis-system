@@ -34,13 +34,13 @@ spec:
               name: http
               protocol: TCP
           env:
-            # Server Configuration
-            - name: SERVER_GRPC_PORT
-              value: {{ .Values.nlpProcessing.env.serverGrpcPort | quote }}
+            # Server Configuration - FIXED: Use correct environment variable names
+            - name: GRPC_PORT
+              value: {{ .Values.nlpProcessing.service.grpcPort | quote }}
             - name: SERVER_HTTP_PORT
-              value: {{ .Values.nlpProcessing.env.serverHttpPort | quote }}
-            - name: SERVER_ENVIRONMENT
-              value: {{ .Values.nlpProcessing.env.serverEnvironment | quote }}
+              value: {{ .Values.nlpProcessing.service.httpPort | quote }}
+            - name: ENVIRONMENT
+              value: {{ .Values.global.environment | quote }}
 
             # PostgreSQL Configuration (Go format)
             - name: POSTGRES_HOST
@@ -96,7 +96,7 @@ spec:
                   name: db-config
                   key: DATABASE_CONN_MAX_IDLE_TIME_NLP
 
-            # Redis Configuration (Go format)
+            # Redis Configuration (Go format) - FIXED: Handle empty password
             - name: REDIS_HOST
               valueFrom:
                 secretKeyRef:
@@ -119,11 +119,9 @@ spec:
                   name: redis-config
                   key: REDIS_DATABASE_NLP_PROCESSING
 
-            # Service Dependencies
-            - name: NEWS_INGESTION_HOST
-              value: {{ .Values.nlpProcessing.env.newsIngestionHost | quote }}
-            - name: NEWS_INGESTION_PORT
-              value: {{ .Values.nlpProcessing.env.newsIngestionPort | quote }}
+            # Service Dependencies - FIXED: Add NEWS_INGESTION_ENDPOINT
+            - name: NEWS_INGESTION_ENDPOINT
+              value: "news-ingestion.{{ .Values.global.namespace }}.svc.cluster.local:{{ .Values.newsIngestion.service.grpcPort }}"
 
           resources:
             {{- toYaml .Values.nlpProcessing.resources | nindent 12 }}
