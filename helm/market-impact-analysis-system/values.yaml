@@ -120,8 +120,19 @@ marketImpact:
     nlpProcessingPort: "50052"
     newsIngestionHost: "news-ingestion.financial-news.svc.cluster.local"
     newsIngestionPort: "4002"
-    alertSignalHost: "alert-signal.financial-news.svc.cluster.local"
-    alertSignalPort: "9095"
+    alertSignalHost: "alert-signal.financial-news.svc.cluster.local"  # ✅ Already there
+    alertSignalPort: "9095"  # ✅ Already there
+
+#  env:
+#    serverPort: "8082"
+#    serverContextPath: "/market-impact"
+#    grpcServerPort: "9090"
+#    nlpProcessingHost: "nlp-processing.financial-news.svc.cluster.local"
+#    nlpProcessingPort: "50052"
+#    newsIngestionHost: "news-ingestion.financial-news.svc.cluster.local"
+#    newsIngestionPort: "4002"
+#    alertSignalHost: "alert-signal.financial-news.svc.cluster.local"
+#    alertSignalPort: "9095"
 
   resources:
     requests:
