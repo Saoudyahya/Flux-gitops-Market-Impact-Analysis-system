@@ -97,8 +97,7 @@ spec:
                   name: redis-config
                   key: REDIS_DATABASE_MARKET_IMPACT
 
-            # ✅ FIXED: External Service Dependencies
-            # Spring Boot maps: EXTERNAL_SERVICES_NLP_PROCESSING_HOST → external.services.nlp-processing.host
+            # External Service Dependencies
             - name: EXTERNAL_SERVICES_NLP_PROCESSING_HOST
               value: {{ .Values.marketImpact.env.nlpProcessingHost | quote }}
             - name: EXTERNAL_SERVICES_NLP_PROCESSING_PORT
@@ -109,14 +108,10 @@ spec:
             - name: EXTERNAL_SERVICES_NEWS_INGESTION_PORT
               value: {{ .Values.marketImpact.env.newsIngestionPort | quote }}
 
-{{/*            - name: EXTERNAL_SERVICES_ALERT_SIGNAL_HOST*/}}
-{{/*              value: {{ .Values.marketImpact.env.alertSignalHost | quote }}*/}}
-{{/*            - name: EXTERNAL_SERVICES_ALERT_SIGNAL_PORT*/}}
-{{/*              value: {{ .Values.marketImpact.env.alertSignalPort | quote }}*/}}
             - name: EXTERNAL_SERVICES_ALERT_SIGNAL_HOST
               value: {{ .Values.marketImpact.env.alertSignalHost | quote }}
-             - name: EXTERNAL_SERVICES_ALERT_SIGNAL_PORT
-               value: {{ .Values.marketImpact.env.alertSignalPort | quote }}
+            - name: EXTERNAL_SERVICES_ALERT_SIGNAL_PORT
+              value: {{ .Values.marketImpact.env.alertSignalPort | quote }}
 
           resources:
             {{- toYaml .Values.marketImpact.resources | nindent 12 }}
