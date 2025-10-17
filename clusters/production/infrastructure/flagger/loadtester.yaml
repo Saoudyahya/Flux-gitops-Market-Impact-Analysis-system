@@ -1,0 +1,51 @@
+# clusters/production/infrastructure/flagger/loadtester.yaml
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: flagger-loadtester
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: financial-news
+  dependsOn:
+    - name: flagger
+      namespace: flux-system
+  chart:
+    spec:
+      chart: loadtester
+      version: 0.33.0
+      sourceRef:
+        kind: HelmRepository
+        name: flagger
+        namespace: flux-system
+  install:
+    createNamespace: false
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    # LoadTester configuration
+    fullnameOverride: flagger-loadtester
+
+    # Resources
+    resources:
+      limits:
+        memory: "512Mi"
+        cpu: "1000m"
+      requests:
+        memory: "64Mi"
+        cpu: "10m"
+
+    # Service
+    service:
+      type: ClusterIP
+      port: 80
+
+    # Logging
+    logLevel: info
+
+    # CMD options
+    cmd:
+      timeout: 1h

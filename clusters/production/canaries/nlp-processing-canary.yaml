@@ -1,0 +1,82 @@
+apiVersion: flagger.app/v1beta1
+kind: Canary
+metadata:
+  name: nlp-processing
+  namespace: financial-news
+spec:
+  # Deployment reference
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nlp-processing
+
+  # HPA reference
+  autoscalerRef:
+    apiVersion: autoscaling/v2
+    kind: HorizontalPodAutoscaler
+    name: nlp-processing
+
+  # Service configuration
+  service:
+    port: 50052
+    targetPort: 50052
+    name: grpc
+    portName: grpc
+    portDiscovery: true
+    trafficPolicy:
+      tls:
+        mode: ISTIO_MUTUAL
+
+  # Canary analysis
+  analysis:
+    interval: 1m
+    threshold: 5
+    maxWeight: 50
+    stepWeight: 10
+
+    # Extended intervals for NLP service (heavier workload)
+    metrics:
+      - name: request-success-rate
+        thresholdRange:
+          min: 99
+        interval: 1m
+
+      - name: request-duration
+        # Higher threshold for NLP processing
+        thresholdRange:
+          max: 2000  # 2 seconds
+        interval: 1m
+
+      - name: error-rate
+        templateRef:
+          name: error-rate
+          namespace: istio-system
+        thresholdRange:
+          max: 1
+        interval: 1m
+
+      # CPU utilization check
+      - name: cpu-usage
+        templateRef:
+          name: cpu-usage
+          namespace: istio-system
+        thresholdRange:
+          max: 80
+        interval: 1m
+
+    # Webhooks for gRPC testing
+    webhooks:
+      - name: acceptance-test
+        type: pre-rollout
+        url: http://flagger-loadtester.financial-news/
+        timeout: 30s
+        metadata:
+          type: bash
+          cmd: "curl -sd 'test' http://nlp-processing-canary.financial-news:8080/health | grep -q 'ok'"
+
+      - name: load-test
+        type: rollout
+        url: http://flagger-loadtester.financial-news/
+        timeout: 5s
+        metadata:
+          cmd: "hey -z 2m -q 5 -c 2 http://nlp-processing-canary.financial-news:8080/health"
