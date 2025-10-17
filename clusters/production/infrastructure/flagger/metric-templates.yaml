@@ -1,0 +1,140 @@
+# clusters/production/infrastructure/flagger/metric-templates.yaml
+---
+apiVersion: flagger.app/v1beta1
+kind: MetricTemplate
+metadata:
+  name: error-rate
+  namespace: istio-system
+spec:
+  provider:
+    type: prometheus
+    address: http://monitoring-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
+  query: |
+    100 - sum(
+      rate(
+        istio_requests_total{
+          reporter="destination",
+          destination_workload_namespace="{{ namespace }}",
+          destination_workload=~"{{ target }}",
+          response_code!~"5.*"
+        }[{{ interval }}]
+      )
+    )
+    /
+    sum(
+      rate(
+        istio_requests_total{
+          reporter="destination",
+          destination_workload_namespace="{{ namespace }}",
+          destination_workload=~"{{ target }}"
+        }[{{ interval }}]
+      )
+    ) * 100
+
+---
+apiVersion: flagger.app/v1beta1
+kind: MetricTemplate
+metadata:
+  name: latency
+  namespace: istio-system
+spec:
+  provider:
+    type: prometheus
+    address: http://monitoring-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
+  query: |
+    histogram_quantile(
+      0.99,
+      sum(
+        rate(
+          istio_request_duration_milliseconds_bucket{
+            reporter="destination",
+            destination_workload_namespace="{{ namespace }}",
+            destination_workload=~"{{ target }}"
+          }[{{ interval }}]
+        )
+      ) by (le)
+    )
+
+---
+apiVersion: flagger.app/v1beta1
+kind: MetricTemplate
+metadata:
+  name: cpu-usage
+  namespace: istio-system
+spec:
+  provider:
+    type: prometheus
+    address: http://monitoring-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
+  query: |
+    sum(
+      rate(
+        container_cpu_usage_seconds_total{
+          namespace="{{ namespace }}",
+          pod=~"{{ target }}-[0-9a-zA-Z]+(-[0-9a-zA-Z]+)"
+        }[{{ interval }}]
+      )
+    ) 
+    / 
+    sum(
+      kube_pod_container_resource_requests{
+        namespace="{{ namespace }}",
+        pod=~"{{ target }}-[0-9a-zA-Z]+(-[0-9a-zA-Z]+)",
+        resource="cpu"
+      }
+    ) * 100
+
+---
+apiVersion: flagger.app/v1beta1
+kind: MetricTemplate
+metadata:
+  name: memory-usage
+  namespace: istio-system
+spec:
+  provider:
+    type: prometheus
+    address: http://monitoring-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
+  query: |
+    sum(
+      container_memory_working_set_bytes{
+        namespace="{{ namespace }}",
+        pod=~"{{ target }}-[0-9a-zA-Z]+(-[0-9a-zA-Z]+)"
+      }
+    ) 
+    / 
+    sum(
+      kube_pod_container_resource_requests{
+        namespace="{{ namespace }}",
+        pod=~"{{ target }}-[0-9a-zA-Z]+(-[0-9a-zA-Z]+)",
+        resource="memory"
+      }
+    ) * 100
+
+---
+apiVersion: flagger.app/v1beta1
+kind: MetricTemplate
+metadata:
+  name: grpc-error-rate
+  namespace: istio-system
+spec:
+  provider:
+    type: prometheus
+    address: http://monitoring-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
+  query: |
+    100 - sum(
+      rate(
+        grpc_server_handled_total{
+          namespace="{{ namespace }}",
+          job=~"{{ target }}",
+          grpc_code!~"Unknown|Unimplemented|Internal|Unavailable|DataLoss"
+        }[{{ interval }}]
+      )
+    )
+    /
+    sum(
+      rate(
+        grpc_server_handled_total{
+          namespace="{{ namespace }}",
+          job=~"{{ target }}"
+        }[{{ interval }}]
+      )
+    ) * 100

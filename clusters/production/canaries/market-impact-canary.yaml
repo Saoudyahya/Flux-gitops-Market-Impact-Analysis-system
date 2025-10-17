@@ -1,0 +1,72 @@
+# clusters/production/canaries/market-impact-canary.yaml
+apiVersion: flagger.app/v1beta1
+kind: Canary
+metadata:
+  name: market-impact
+  namespace: financial-news
+spec:
+  # Deployment reference
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: market-impact
+
+  # HPA reference
+  autoscalerRef:
+    apiVersion: autoscaling/v2
+    kind: HorizontalPodAutoscaler
+    name: market-impact
+
+  # Service configuration
+  service:
+    port: 8082
+    targetPort: 8082
+    name: http
+    portName: http
+    portDiscovery: true
+    trafficPolicy:
+      tls:
+        mode: ISTIO_MUTUAL
+
+  # Canary analysis
+  analysis:
+    interval: 1m
+    threshold: 5
+    maxWeight: 50
+    stepWeight: 10
+
+    metrics:
+      - name: request-success-rate
+        thresholdRange:
+          min: 99
+        interval: 1m
+
+      - name: request-duration
+        thresholdRange:
+          max: 1000
+        interval: 1m
+
+      - name: error-rate
+        templateRef:
+          name: error-rate
+          namespace: istio-system
+        thresholdRange:
+          max: 1
+        interval: 1m
+
+    # Webhooks
+    webhooks:
+      - name: acceptance-test
+        type: pre-rollout
+        url: http://flagger-loadtester.financial-news/
+        timeout: 30s
+        metadata:
+          type: bash
+          cmd: "curl -sd 'test' http://market-impact-canary.financial-news:8082/market-impact/actuator/health | grep -q 'UP'"
+
+      - name: load-test
+        type: rollout
+        url: http://flagger-loadtester.financial-news/
+        timeout: 5s
+        metadata:
+          cmd: "hey -z 1m -q 10 -c 2 http://market-impact-canary.financial-news:8082/market-impact/actuator/health"

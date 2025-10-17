@@ -1,0 +1,65 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: flagger
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: istio-system
+  dependsOn:
+    - name: istiod
+      namespace: flux-system
+    - name: kube-prometheus-stack
+      namespace: flux-system
+  chart:
+    spec:
+      chart: flagger
+      version: 1.38.0
+      sourceRef:
+        kind: HelmRepository
+        name: flagger
+        namespace: flux-system
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    # Flagger configuration
+    metricsServer: "http://monitoring-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090"
+
+    # Mesh provider (Istio)
+    meshProvider: istio
+
+    # Enable Slack/Teams notifications (optional)
+    slack:
+      url: ""  # Add your Slack webhook URL
+      channel: ""
+      user: "flagger"
+
+    # Logging
+    logLevel: info
+
+    # Resources
+    resources:
+      limits:
+        memory: "512Mi"
+        cpu: "1000m"
+      requests:
+        memory: "32Mi"
+        cpu: "10m"
+
+    # Prometheus metrics
+    prometheus:
+      install: false  # We already have Prometheus
+
+    # Controller settings
+    threadiness: 10
+
+    # Namespace to watch (empty = all namespaces)
+    namespace: ""
+
+    # Include namespaces
+    includeNamespaces:
+      - financial-news
