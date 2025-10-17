@@ -5,8 +5,8 @@ resources:
   - namespace.yaml              # Create namespace first
   - infrastructure/istio        # Then Istio
   - infrastructure/monitoring   # Then monitoring (Prometheus)
-  - infrastructure/flagger      # Then Flagger
+  - infrastructure/flagger      # Then Flagger (installs CRDs)
   - infrastructure/secrets      # Then secrets
   - infrastructure/configs      # Then configs
   - helmrelease.yaml           # Deploy application
-  - canaries                   # Finally setup canaries
+  - canaries-kustomization.yaml # Canaries deployed after Flagger is ready

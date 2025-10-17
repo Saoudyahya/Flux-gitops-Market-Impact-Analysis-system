@@ -1,3 +1,4 @@
+# clusters/production/infrastructure/flagger/flagger.yaml
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -22,26 +23,15 @@ spec:
   install:
     remediation:
       retries: 3
+    crds: CreateReplace  # ✅ ADD THIS
   upgrade:
     remediation:
       retries: 3
+    crds: CreateReplace  # ✅ ADD THIS
   values:
-    # Flagger configuration
     metricsServer: "http://monitoring-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090"
-
-    # Mesh provider (Istio)
-    meshProvider: istio
-
-    # Enable Slack/Teams notifications (optional)
-    slack:
-      url: ""  # Add your Slack webhook URL
-      channel: ""
-      user: "flagger"
-
-    # Logging
+    meshProvider: istio  # ✅ Already correct
     logLevel: info
-
-    # Resources
     resources:
       limits:
         memory: "512Mi"
@@ -49,17 +39,9 @@ spec:
       requests:
         memory: "32Mi"
         cpu: "10m"
-
-    # Prometheus metrics
     prometheus:
-      install: false  # We already have Prometheus
-
-    # Controller settings
+      install: false
     threadiness: 10
-
-    # Namespace to watch (empty = all namespaces)
     namespace: ""
-
-    # Include namespaces
     includeNamespaces:
       - financial-news
