@@ -1,0 +1,25 @@
+clusters/production/canaries-kustomization.yaml
+# This is a Flux Kustomization that deploys canaries AFTER Flagger is ready
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: canaries
+  namespace: flux-system
+spec:
+  interval: 10m0s
+  path: ./clusters/production/canaries
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  # ⚠️ IMPORTANT: Wait for Flagger to install CRDs first
+  dependsOn:
+    - name: flux-system  # Wait for main infrastructure
+  # Health checks - wait for Flagger to be ready
+  healthChecks:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: flagger
+      namespace: istio-system
+  timeout: 5m0s
+  retryInterval: 2m0s
