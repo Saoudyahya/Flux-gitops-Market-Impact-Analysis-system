@@ -135,15 +135,10 @@ spec:
                   name: redis-config
                   key: REDIS_DATABASE_ALERT_SIGNAL
 
-            # ✅ ADD: External Service Dependencies
-            - name: EXTERNAL_SERVICES_MARKET_IMPACT_HOST
-              value: "market-impact.{{ .Values.global.namespace }}.svc.cluster.local"
-            - name: EXTERNAL_SERVICES_MARKET_IMPACT_PORT
-              value: "9090"
-            - name: EXTERNAL_SERVICES_NLP_PROCESSING_HOST
-              value: "nlp-processing.{{ .Values.global.namespace }}.svc.cluster.local"
-            - name: EXTERNAL_SERVICES_NLP_PROCESSING_PORT
-              value: "50052"
+            # ✅ FIXED: gRPC Client Configuration
+            # Spring Boot will map GRPC_CLIENT_MARKET_IMPACT_SERVICE_ADDRESS to grpc.client.market-impact-service.address
+            - name: GRPC_CLIENT_MARKET_IMPACT_SERVICE_ADDRESS
+              value: "static://market-impact.{{ .Values.global.namespace }}.svc.cluster.local:9090"
 
           resources:
             {{- toYaml .Values.alertSignal.resources | nindent 12 }}

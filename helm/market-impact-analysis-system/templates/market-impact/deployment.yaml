@@ -109,10 +109,14 @@ spec:
             - name: EXTERNAL_SERVICES_NEWS_INGESTION_PORT
               value: {{ .Values.marketImpact.env.newsIngestionPort | quote }}
 
+{{/*            - name: EXTERNAL_SERVICES_ALERT_SIGNAL_HOST*/}}
+{{/*              value: {{ .Values.marketImpact.env.alertSignalHost | quote }}*/}}
+{{/*            - name: EXTERNAL_SERVICES_ALERT_SIGNAL_PORT*/}}
+{{/*              value: {{ .Values.marketImpact.env.alertSignalPort | quote }}*/}}
             - name: EXTERNAL_SERVICES_ALERT_SIGNAL_HOST
               value: {{ .Values.marketImpact.env.alertSignalHost | quote }}
-            - name: EXTERNAL_SERVICES_ALERT_SIGNAL_PORT
-              value: {{ .Values.marketImpact.env.alertSignalPort | quote }}
+             - name: EXTERNAL_SERVICES_ALERT_SIGNAL_PORT
+               value: {{ .Values.marketImpact.env.alertSignalPort | quote }}
 
           resources:
             {{- toYaml .Values.marketImpact.resources | nindent 12 }}
