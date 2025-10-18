@@ -59,7 +59,7 @@ spec:
       replicaCount: 1
       image:
         repository: market-impact-analysis-system-market-impact-service
-        tag: "6"
+        tag: "11"
       resources:
         requests:
           memory: "512Mi"
