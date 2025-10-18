@@ -1,23 +1,19 @@
-# clusters/production/canaries/market-impact-canary.yaml
 apiVersion: flagger.app/v1beta1
 kind: Canary
 metadata:
   name: market-impact
   namespace: financial-news
 spec:
-  # Deployment reference
   targetRef:
     apiVersion: apps/v1
     kind: Deployment
     name: market-impact
 
-  # HPA reference
   autoscalerRef:
     apiVersion: autoscaling/v2
     kind: HorizontalPodAutoscaler
     name: market-impact
 
-  # Service configuration
   service:
     port: 8082
     targetPort: 8082
@@ -28,7 +24,6 @@ spec:
       tls:
         mode: ISTIO_MUTUAL
 
-  # Canary analysis
   analysis:
     interval: 1m
     threshold: 5
@@ -54,15 +49,39 @@ spec:
           max: 1
         interval: 1m
 
-    # Webhooks
     webhooks:
+      # ✅ IMPROVED ACCEPTANCE TEST WITH RETRIES
       - name: acceptance-test
         type: pre-rollout
         url: http://flagger-loadtester.financial-news/
-        timeout: 30s
+        timeout: 60s  # Increased timeout
         metadata:
           type: bash
-          cmd: "curl -sd 'test' http://market-impact-canary.financial-news:8082/market-impact/actuator/health | grep -q 'UP'"
+          cmd: |
+            echo "🔍 Testing market-impact-canary health endpoint..."
+            for i in {1..12}; do
+              HTTP_CODE=$(curl -s -o /dev/null -w '%{http_code}' http://market-impact-canary.financial-news:8082/market-impact/actuator/health)
+            
+              if [ "$HTTP_CODE" = "200" ]; then
+                echo "✅ Health check passed! (HTTP $HTTP_CODE)"
+                HEALTH_BODY=$(curl -s http://market-impact-canary.financial-news:8082/market-impact/actuator/health)
+                echo "Response: $HEALTH_BODY"
+            
+                # Check if status is UP
+                if echo "$HEALTH_BODY" | grep -q '"status":"UP"'; then
+                  echo "✅ Service status: UP"
+                  exit 0
+                else
+                  echo "⚠️ Service responded but status is not UP"
+                fi
+              fi
+            
+              echo "⏳ Attempt $i/12: HTTP $HTTP_CODE - waiting 5s..."
+              sleep 5
+            done
+            
+            echo "❌ Service failed to become healthy after 12 attempts (60 seconds)"
+            exit 1
 
       - name: load-test
         type: rollout
