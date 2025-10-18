@@ -37,7 +37,7 @@ commonLabels:
 alertSignal:
   enabled: true
   name: alert-signal
-  replicaCount: 2
+  replicaCount: 1
 
   image:
     repository: market-impact-analysis-system-alert-signal-service
@@ -101,7 +101,7 @@ alertSignal:
 marketImpact:
   enabled: true
   name: market-impact
-  replicaCount: 2
+  replicaCount: 1
 
   image:
     repository: market-impact-analysis-system-market-impact-service
@@ -181,7 +181,7 @@ marketImpact:
 newsIngestion:
   enabled: true
   name: news-ingestion
-  replicaCount: 2
+  replicaCount: 1
 
   image:
     repository: market-impact-analysis-system-news-ingestion-service
@@ -248,7 +248,7 @@ newsIngestion:
 nlpProcessing:
   enabled: true
   name: nlp-processing
-  replicaCount: 3
+  replicaCount: 1
 
   image:
     repository: market-impact-analysis-system-nlp-processing-service
