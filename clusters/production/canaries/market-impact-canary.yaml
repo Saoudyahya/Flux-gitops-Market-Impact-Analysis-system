@@ -17,7 +17,6 @@ spec:
   service:
     port: 8082
     targetPort: 8082
-    name: http
     portName: http
     portDiscovery: true
     trafficPolicy:

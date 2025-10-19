@@ -20,7 +20,6 @@ spec:
   service:
     port: 4001
     targetPort: 4001
-    name: http
     portName: http
     # Additional ports
     portDiscovery: true
