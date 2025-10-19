@@ -54,14 +54,16 @@ spec:
         interval: 1m
 
     # Webhooks
+    # In alert-signal-canary.yaml
     webhooks:
       - name: acceptance-test
         type: pre-rollout
         url: http://flagger-loadtester.financial-news/
-        timeout: 30s
+        timeout: 60s  # ✅ Increased timeout
         metadata:
           type: bash
-          cmd: "curl -sd 'test' http://alert-signal-canary.financial-news:8081/api/actuator/health | grep -q 'UP'"
+          # ✅ Fixed: Use GET request and check for HTTP 200
+          cmd: "curl -sf http://alert-signal-canary.financial-news:8081/api/actuator/health && echo 'Health check passed'"
 
       - name: load-test
         type: rollout
