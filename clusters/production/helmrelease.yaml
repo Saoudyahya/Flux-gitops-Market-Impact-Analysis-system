@@ -77,7 +77,7 @@ spec:
       replicaCount: 0
       image:
         repository: market-impact-analysis-system-news-ingestion-service
-        tag: "5"
+        tag: "15"
       resources:
         requests:
           memory: "1Gi"
