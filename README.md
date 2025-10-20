@@ -2,20 +2,21 @@
 
 # 📊 Market Impact Analysis System
 
-### Kubernetes Deployment with Helm Charts
+### Cloud-Native Microservices Platform with Progressive Delivery
 
 [![Kubernetes](https://img.shields.io/badge/Kubernetes-326CE5?style=for-the-badge&logo=kubernetes&logoColor=white)](https://kubernetes.io/)
 [![Helm](https://img.shields.io/badge/Helm-0F1689?style=for-the-badge&logo=helm&logoColor=white)](https://helm.sh/)
 [![FluxCD](https://img.shields.io/badge/FluxCD-5468FF?style=for-the-badge&logo=flux&logoColor=white)](https://fluxcd.io/)
-[![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+[![Istio](https://img.shields.io/badge/Istio-466BB0?style=for-the-badge&logo=istio&logoColor=white)](https://istio.io/)
+[![Flagger](https://img.shields.io/badge/Flagger-00B4E6?style=for-the-badge)](https://flagger.app/)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Helm Chart](https://img.shields.io/badge/Helm%20Chart-v1.0.0-blue)](./helm/market-impact-analysis-system/Chart.yaml)
 [![Kubernetes Version](https://img.shields.io/badge/Kubernetes-v1.24+-brightgreen)](https://kubernetes.io/)
 
-**A cloud-native financial news analysis platform powered by microservices architecture**
+**Enterprise-grade financial news analysis platform with automated canary deployments and service mesh**
 
-[Features](#-features) • [Architecture](#-architecture) • [Quick Start](#-quick-start) • [Configuration](#-configuration) • [Deployment](#-deployment)
+[Features](#-features) • [Architecture](#-architecture) • [Quick Start](#-quick-start) • [Infrastructure](#-infrastructure) • [Deployment](#-deployment) • [Monitoring](#-monitoring--observability)
 
 </div>
 
@@ -29,29 +30,29 @@
 - [Prerequisites](#-prerequisites)
 - [Quick Start](#-quick-start)
 - [Repository Structure](#-repository-structure)
+- [Infrastructure Components](#-infrastructure-components)
 - [Configuration](#-configuration)
 - [Deployment](#-deployment)
+- [Canary Deployments](#-canary-deployments)
 - [GitOps Workflow](#-gitops-workflow)
-- [Migration Guide](#-migration-guide)
-- [Monitoring & Troubleshooting](#-monitoring--troubleshooting)
+- [Monitoring & Observability](#-monitoring--observability)
+- [Troubleshooting](#-troubleshooting)
 - [Best Practices](#-best-practices)
 
 ---
 
 ## 🎯 Overview
 
-The **Market Impact Analysis System** is a sophisticated microservices-based platform designed to ingest, process, and analyze financial news data in real-time. Built with cloud-native principles, it provides scalable, resilient infrastructure for market impact assessment.
+The **Market Impact Analysis System** is a production-ready, cloud-native platform for real-time financial news analysis. Built with modern DevOps practices, it leverages Kubernetes orchestration, Istio service mesh, automated canary deployments with Flagger, and GitOps continuous delivery with FluxCD.
 
-### 🌟 Why Helm?
+### 🌟 Why This Architecture?
 
-We've migrated from Kustomize to Helm to leverage:
-
-- ✅ **Superior Templating** - Conditional logic, loops, and reusable functions
-- ✅ **Release Management** - Built-in versioning, rollback, and upgrade capabilities
-- ✅ **Values Hierarchy** - Clean environment-specific configuration
-- ✅ **Dependency Management** - Native chart dependencies support
-- ✅ **Testing & Validation** - Built-in linting and template testing
-- ✅ **Community Ecosystem** - Access to thousands of community charts
+- ✅ **Progressive Delivery** - Automated canary deployments with Flagger reduce deployment risk
+- ✅ **Service Mesh** - Istio provides advanced traffic management, security, and observability
+- ✅ **GitOps** - FluxCD ensures declarative, version-controlled infrastructure
+- ✅ **Observability** - Full-stack monitoring with Prometheus, Grafana, and Kiali
+- ✅ **Scalability** - Kubernetes HPA with intelligent autoscaling policies
+- ✅ **Resilience** - Circuit breakers, retries, and health checks at every layer
 
 ---
 
@@ -61,26 +62,52 @@ We've migrated from Kustomize to Helm to leverage:
 <tr>
 <td width="50%">
 
-### 🚀 Platform Capabilities
+### 🚀 Application Capabilities
 
 - 📰 **Real-time News Ingestion**
-- 🧠 **NLP Processing & Sentiment Analysis**
-- 📈 **Market Impact Prediction**
-- 🔔 **Intelligent Alert System**
-- 🔄 **Auto-scaling & Self-healing**
-- 🌐 **Multi-environment Support**
+  - NewsAPI integration
+  - Configurable fetch intervals
+  - Duplicate detection
+  
+- 🧠 **NLP Processing**
+  - Sentiment analysis
+  - Entity extraction
+  - Topic classification
+  
+- 📈 **Market Impact Analysis**
+  - Predictive scoring
+  - Historical correlation
+  - Real-time updates
+  
+- 🔔 **Intelligent Alerting**
+  - Threshold-based triggers
+  - Multi-channel delivery
+  - Alert aggregation
 
 </td>
 <td width="50%">
 
-### 🛠️ Technical Stack
+### 🛠️ Platform Features
 
-- ⚙️ **Kubernetes** - Orchestration
-- 🎭 **Helm** - Package Management
-- 🔄 **Flux CD** - GitOps Delivery
-- 🗄️ **PostgreSQL** - Data Storage
-- ⚡ **Redis** - Caching Layer
-- 🔌 **gRPC** - Service Communication
+- 🎯 **Progressive Delivery**
+  - Automated canary analysis
+  - Traffic shifting
+  - Automatic rollback
+  
+- 🔒 **Security**
+  - mTLS service-to-service
+  - Secret management
+  - Network policies
+  
+- 📊 **Observability**
+  - Distributed tracing
+  - Metrics collection
+  - Service mesh visualization
+  
+- 🔄 **Auto-scaling**
+  - CPU/Memory-based HPA
+  - Custom metrics support
+  - Intelligent scale policies
 
 </td>
 </tr>
@@ -90,41 +117,54 @@ We've migrated from Kustomize to Helm to leverage:
 
 ## 🏗️ Architecture
 
-### System Architecture
+### High-Level Architecture with Service Mesh
 
 ```mermaid
 graph TB
-    subgraph "External Services"
-        NewsAPI[📰 News APIs]
+    subgraph "External Traffic"
+        Client[📱 Clients]
     end
     
     subgraph "Kubernetes Cluster"
-        subgraph "Ingestion Layer"
-            NI[🔵 News Ingestion<br/>Port: 4001/4002]
-        end
-        
-        subgraph "Processing Layer"
-            NLP[🟣 NLP Processing<br/>Port: 50052]
-        end
-        
-        subgraph "Analysis Layer"
-            MI[🟢 Market Impact<br/>Port: 8082/9090]
-        end
-        
-        subgraph "Alert Layer"
-            AS[🟠 Alert Signal<br/>Port: 8081/9095]
+        subgraph "Istio Service Mesh"
+            Gateway[🚪 Istio Gateway]
+            
+            subgraph "Application Services"
+                NI[🔵 News Ingestion<br/>Canary Enabled]
+                NLP[🟣 NLP Processing<br/>Canary Enabled]
+                MI[🟢 Market Impact<br/>Canary Enabled]
+                AS[🟠 Alert Signal<br/>Canary Enabled]
+            end
+            
+            subgraph "Progressive Delivery"
+                Flagger[⚡ Flagger<br/>Canary Controller]
+            end
         end
         
         subgraph "Data Layer"
-            DB[(🗄️ PostgreSQL)]
+            DB[(🗄️ PostgreSQL<br/>AWS RDS)]
             Redis[(⚡ Redis Cache)]
+        end
+        
+        subgraph "Observability Stack"
+            Prometheus[📊 Prometheus]
+            Grafana[📈 Grafana]
+            Kiali[🕸️ Kiali]
         end
     end
     
-    NewsAPI -->|Fetch News| NI
-    NI -->|gRPC| NLP
-    NLP -->|Analysis| MI
-    MI -->|Signals| AS
+    Client -->|HTTPS| Gateway
+    Gateway -->|Traffic Split| NI
+    NI -->|gRPC + mTLS| NLP
+    NLP -->|gRPC + mTLS| MI
+    MI -->|gRPC + mTLS| AS
+    
+    Flagger -.->|Monitors| NI
+    Flagger -.->|Monitors| NLP
+    Flagger -.->|Monitors| MI
+    Flagger -.->|Monitors| AS
+    
+    Flagger -.->|Queries Metrics| Prometheus
     
     NI -.->|Store| DB
     NLP -.->|Store| DB
@@ -136,119 +176,148 @@ graph TB
     MI -.->|Cache| Redis
     AS -.->|Cache| Redis
     
+    Prometheus -.->|Scrape| NI
+    Prometheus -.->|Scrape| NLP
+    Prometheus -.->|Scrape| MI
+    Prometheus -.->|Scrape| AS
+    
+    Kiali -.->|Visualize| Gateway
+    Grafana -.->|Query| Prometheus
+    
+    style Gateway fill:#5B8FF9
     style NI fill:#4A90E2
     style NLP fill:#9B59B6
     style MI fill:#2ECC71
     style AS fill:#E67E22
+    style Flagger fill:#FF6B6B
     style DB fill:#34495E
     style Redis fill:#E74C3C
+    style Prometheus fill:#E64759
+    style Grafana fill:#F46800
+    style Kiali fill:#009ABD
 ```
 
-### Service Communication Flow
+### Canary Deployment Flow
 
 ```mermaid
 sequenceDiagram
-    participant NewsAPI as 📰 News API
-    participant NI as News Ingestion
-    participant NLP as NLP Processing
-    participant MI as Market Impact
-    participant AS as Alert Signal
-    participant DB as PostgreSQL
+    participant Dev as 👨‍💻 Developer
+    participant Git as 📚 Git Repo
+    participant Flux as 🔄 FluxCD
+    participant K8s as ☸️ Kubernetes
+    participant Flagger as ⚡ Flagger
+    participant Istio as 🕸️ Istio
+    participant Prom as 📊 Prometheus
     
-    NewsAPI->>NI: Fetch Articles
-    NI->>DB: Store Raw Data
-    NI->>NLP: Process Text (gRPC)
-    NLP->>DB: Store Analysis
-    NLP->>MI: Send Results (gRPC)
-    MI->>DB: Store Impact Score
-    MI->>AS: Generate Alert (gRPC)
-    AS->>DB: Store Alert
-    AS-->>MI: Alert Confirmation
+    Dev->>Git: Push new image tag
+    Git-->>Flux: Webhook notification
+    Flux->>Git: Pull HelmRelease
+    Flux->>K8s: Update Deployment
+    K8s->>Flagger: Detect change
+    
+    Flagger->>K8s: Create canary pods
+    Flagger->>Istio: Shift 10% traffic
+    
+    loop Analysis (5 iterations)
+        Flagger->>Prom: Query success rate
+        Flagger->>Prom: Query latency
+        Prom-->>Flagger: Metrics OK
+        Flagger->>Istio: Increase traffic +10%
+    end
+    
+    alt Metrics Pass
+        Flagger->>Istio: Route 100% to canary
+        Flagger->>K8s: Promote canary
+        Flagger->>K8s: Scale down primary
+        Flagger-->>Dev: ✅ Deployment Success
+    else Metrics Fail
+        Flagger->>Istio: Route 100% to primary
+        Flagger->>K8s: Scale down canary
+        Flagger-->>Dev: ❌ Rollback Complete
+    end
 ```
 
 ---
 
 ## 📦 Repository Structure
 
-```mermaid
-graph LR
-    Root[📁 Repository Root]
-    
-    Root --> Helm[📂 helm/]
-    Root --> Clusters[📂 clusters/]
-    Root --> Scripts[📄 Scripts]
-    
-    Helm --> Chart[📊 market-impact-analysis-system/]
-    Chart --> ChartYaml[Chart.yaml]
-    Chart --> Values[values.yaml]
-    Chart --> ValuesProd[values-production.yaml]
-    Chart --> ValuesStage[values-staging.yaml]
-    Chart --> Templates[📂 templates/]
-    
-    Templates --> AlertSig[📁 alert-signal/]
-    Templates --> MarketImp[📁 market-impact/]
-    Templates --> NewsIng[📁 news-ingestion/]
-    Templates --> NLP[📁 nlp-processing/]
-    
-    Clusters --> Prod[📂 production/]
-    Clusters --> Stage[📂 staging/]
-    
-    Prod --> ProdHelm[helmrelease.yaml]
-    Prod --> ProdFlux[flux-system/]
-    
-    Stage --> StageHelm[helmrelease.yaml]
-    Stage --> StageFlux[flux-system/]
-    
-    Scripts --> Migrate[migrate-to-helm.sh]
-    Scripts --> Readme[README.md]
-    
-    style Root fill:#2C3E50
-    style Helm fill:#3498DB
-    style Clusters fill:#E74C3C
-    style Chart fill:#9B59B6
-    style Templates fill:#16A085
-```
-
-### Directory Structure
-
 ```
 📦 market-impact-analysis-system
 ├── 📂 helm/
-│   └── 📂 market-impact-analysis-system/
-│       ├── 📄 Chart.yaml                    # Chart metadata
-│       ├── 📄 values.yaml                   # Default values
-│       ├── 📄 values-production.yaml        # Production config
-│       ├── 📄 values-staging.yaml           # Staging config
-│       ├── 📄 .helmignore                   # Ignore patterns
+│   └── 📂 market-impact-analysis-system/          # Main Helm Chart
+│       ├── 📄 Chart.yaml                          # Chart metadata
+│       ├── 📄 values.yaml                         # Default values
+│       ├── 📄 values-production.yaml              # Production overrides
+│       ├── 📄 values-staging.yaml                 # Staging overrides
+│       ├── 📄 .helmignore
 │       └── 📂 templates/
-│           ├── 📄 _helpers.tpl              # Template helpers
-│           ├── 📄 NOTES.txt                 # Post-install notes
+│           ├── 📄 _helpers.tpl                    # Template helpers
+│           ├── 📄 NOTES.txt                       # Post-install notes
 │           ├── 📄 namespace.yaml
-│           ├── 📂 alert-signal/
+│           ├── 📂 alert-signal/                   # Alert service manifests
 │           │   ├── deployment.yaml
 │           │   ├── service.yaml
 │           │   └── hpa.yaml
-│           ├── 📂 market-impact/
-│           │   ├── deployment.yaml
-│           │   ├── service.yaml
-│           │   └── hpa.yaml
-│           ├── 📂 news-ingestion/
-│           │   ├── deployment.yaml
-│           │   ├── service.yaml
-│           │   └── hpa.yaml
-│           └── 📂 nlp-processing/
-│               ├── deployment.yaml
-│               ├── service.yaml
-│               └── hpa.yaml
+│           ├── 📂 market-impact/                  # Market service manifests
+│           ├── 📂 news-ingestion/                 # Ingestion service manifests
+│           └── 📂 nlp-processing/                 # NLP service manifests
+│
 ├── 📂 clusters/
-│   ├── 📂 production/
-│   │   ├── 📄 helmrelease.yaml
-│   │   └── 📂 flux-system/
-│   └── 📂 staging/
-│       ├── 📄 helmrelease.yaml
-│       └── 📂 flux-system/
-├── 📄 migrate-to-helm.sh                    # Migration script
-└── 📄 README.md                             # This file
+│   └── 📂 production/
+│       ├── 📄 namespace.yaml                      # App namespace
+│       ├── 📄 helmrelease.yaml                    # Flux HelmRelease
+│       ├── 📄 canaries-kustomization.yaml         # Canary configs loader
+│       ├── 📄 kustomization.yaml                  # Main kustomization
+│       │
+│       ├── 📂 flux-system/                        # Flux bootstrap
+│       │   ├── gotk-components.yaml
+│       │   ├── gotk-sync.yaml
+│       │   └── kustomization.yaml
+│       │
+│       ├── 📂 infrastructure/
+│       │   ├── 📂 istio/                          # Service mesh
+│       │   │   ├── helmrepository.yaml
+│       │   │   ├── istio-base.yaml               # CRDs
+│       │   │   ├── istiod.yaml                   # Control plane
+│       │   │   ├── kiali-helmrepository.yaml
+│       │   │   ├── kiali.yaml                    # Mesh visualization
+│       │   │   ├── namespace.yaml
+│       │   │   └── kustomization.yaml
+│       │   │
+│       │   ├── 📂 monitoring/                     # Observability
+│       │   │   ├── namespace.yaml
+│       │   │   ├── prometheus-helmrepository.yaml
+│       │   │   ├── prometheus.yaml               # Prometheus + Grafana
+│       │   │   ├── servicemonitor.yaml           # App metrics
+│       │   │   └── kustomization.yaml
+│       │   │
+│       │   ├── 📂 flagger/                        # Progressive delivery
+│       │   │   ├── helmrepository.yaml
+│       │   │   ├── flagger.yaml                  # Canary controller
+│       │   │   ├── loadtester.yaml               # Traffic generator
+│       │   │   └── kustomization.yaml
+│       │   │
+│       │   ├── 📂 configs/                        # ConfigMaps
+│       │   │   ├── db-config.yaml
+│       │   │   ├── redis-config.yaml
+│       │   │   └── kustomization.yaml
+│       │   │
+│       │   └── 📂 secrets/                        # Secrets (sealed in prod)
+│       │       ├── db-credentials-secret.yaml
+│       │       ├── redis-credentials.yaml
+│       │       └── kustomization.yaml
+│       │
+│       └── 📂 canaries/                           # Canary definitions
+│           ├── metric-templates.yaml              # Custom metrics
+│           ├── news-ingestion-canary.yaml
+│           ├── nlp-processing-canary.yaml
+│           ├── market-impact-canary.yaml
+│           ├── alert-signal-canary.yaml
+│           └── kustomization.yaml
+│
+├── 📄 .gitignore
+├── 📄 .helmignore
+└── 📄 README.md                                   # This file
 ```
 
 ---
@@ -257,55 +326,64 @@ graph LR
 
 ### Required Tools
 
-| Tool | Minimum Version | Purpose |
-|------|----------------|---------|
-| ![Kubernetes](https://img.shields.io/badge/-Kubernetes-326CE5?logo=kubernetes&logoColor=white) | v1.24+ | Container Orchestration |
-| ![Helm](https://img.shields.io/badge/-Helm-0F1689?logo=helm&logoColor=white) | v3.10+ | Package Management |
-| ![kubectl](https://img.shields.io/badge/-kubectl-326CE5?logo=kubernetes&logoColor=white) | v1.24+ | Cluster Management |
-| ![Flux](https://img.shields.io/badge/-FluxCD-5468FF?logo=flux&logoColor=white) | v2.0+ | GitOps (Optional) |
+| Tool | Minimum Version | Purpose | Installation |
+|------|----------------|---------|--------------|
+| ![Kubernetes](https://img.shields.io/badge/-Kubernetes-326CE5?logo=kubernetes&logoColor=white) | v1.24+ | Container Orchestration | [Install Guide](https://kubernetes.io/docs/setup/) |
+| ![Helm](https://img.shields.io/badge/-Helm-0F1689?logo=helm&logoColor=white) | v3.10+ | Package Management | `curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 \| bash` |
+| ![kubectl](https://img.shields.io/badge/-kubectl-326CE5?logo=kubernetes&logoColor=white) | v1.24+ | Cluster CLI | [Install Guide](https://kubernetes.io/docs/tasks/tools/) |
+| ![Flux](https://img.shields.io/badge/-FluxCD-5468FF?logo=flux&logoColor=white) | v2.0+ | GitOps | `curl -s https://fluxcd.io/install.sh \| sudo bash` |
 
-### Installation
+### Required Infrastructure
 
-```bash
-# Install Helm
-curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
-
-# Install kubectl
-curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-chmod +x kubectl && sudo mv kubectl /usr/local/bin/
-
-# Install Flux CLI (optional)
-curl -s https://fluxcd.io/install.sh | sudo bash
-```
+- **Kubernetes Cluster** (EKS, GKE, AKS, or local)
+- **PostgreSQL Database** (AWS RDS or self-hosted)
+- **Redis** (ElastiCache or self-hosted)
+- **Container Registry** (DockerHub, ECR, GCR, etc.)
+- **Git Repository** (GitHub, GitLab, etc.)
 
 ---
 
 ## 🚀 Quick Start
 
-### 1️⃣ Clone the Repository
+### 1️⃣ Bootstrap Flux
 
 ```bash
+# Fork or clone this repository
 git clone https://github.com/your-org/market-impact-analysis-system.git
 cd market-impact-analysis-system
+
+# Bootstrap Flux in your cluster
+flux bootstrap github \
+  --owner=your-org \
+  --repository=market-impact-analysis-system \
+  --branch=main \
+  --path=clusters/production \
+  --personal \
+  --private=false
+
+# Verify Flux installation
+flux check
 ```
 
-### 2️⃣ Create Required Secrets
+### 2️⃣ Create Secrets
 
 ```bash
+# Create namespace first
+kubectl create namespace financial-news
+
 # Database credentials
 kubectl create secret generic db-credentials \
-  --from-literal=host=postgres.example.com \
+  --from-literal=host=your-db-host.rds.amazonaws.com \
   --from-literal=port=5432 \
-  --from-literal=username=dbuser \
-  --from-literal=password=dbpass \
-  --from-literal=database=marketdb \
+  --from-literal=username=postgres_user \
+  --from-literal=password=your-secure-password \
   --namespace financial-news
 
 # Redis credentials
 kubectl create secret generic redis-credentials \
-  --from-literal=host=redis.example.com \
+  --from-literal=host=your-redis-host \
   --from-literal=port=6379 \
-  --from-literal=password=redispass \
+  --from-literal=password=redis-password \
   --namespace financial-news
 
 # API keys
@@ -314,558 +392,844 @@ kubectl create secret generic api-keys \
   --namespace financial-news
 ```
 
-### 3️⃣ Install the Chart
+### 3️⃣ Deploy the Stack
 
 ```bash
-# Development
-helm install market-impact ./helm/market-impact-analysis-system \
-  --namespace financial-news \
-  --create-namespace
+# Flux will automatically deploy everything
+# Watch the deployment
+watch kubectl get all -n financial-news
 
-# Production
-helm install market-impact ./helm/market-impact-analysis-system \
-  --namespace financial-news \
-  --create-namespace \
-  --values ./helm/market-impact-analysis-system/values-production.yaml
+# Monitor Flux reconciliation
+flux get all
+
+# Check canary status
+kubectl get canaries -n financial-news
 ```
 
-### 4️⃣ Verify Deployment
+### 4️⃣ Access Services
 
 ```bash
-# Check all resources
-kubectl get all -n financial-news
+# Port-forward to access services locally
 
-# Check HPA status
-kubectl get hpa -n financial-news
+# Kiali (Service Mesh Dashboard)
+kubectl port-forward -n istio-system svc/kiali 20001:20001
+# Access at: http://localhost:20001/kiali
 
-# View pod logs
-kubectl logs -f deployment/news-ingestion -n financial-news
+# Grafana (Metrics Dashboard)
+kubectl port-forward -n monitoring svc/monitoring-grafana 3000:80
+# Access at: http://localhost:3000 (admin/admin)
+
+# Prometheus (Metrics Database)
+kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
+# Access at: http://localhost:9090
 ```
+
+---
+
+## 🏢 Infrastructure Components
+
+### Istio Service Mesh
+
+Istio provides:
+- **Traffic Management** - Advanced routing, load balancing, circuit breakers
+- **Security** - Automatic mTLS between services
+- **Observability** - Distributed tracing, metrics, service graph
+
+**Components:**
+- `istio-base` - CRDs installation
+- `istiod` - Control plane (v1.24.1)
+- `kiali-server` - Service mesh visualization
+
+**Configuration:**
+```yaml
+# clusters/production/infrastructure/istio/
+├── istio-base.yaml        # Base CRDs
+├── istiod.yaml           # Control plane config
+└── kiali.yaml            # Visualization dashboard
+```
+
+### Flagger Progressive Delivery
+
+Flagger automates canary deployments with:
+- **Automated Analysis** - Success rate, latency, custom metrics
+- **Traffic Shifting** - Gradual rollout (10% → 20% → ... → 100%)
+- **Automatic Rollback** - Fails fast on metric violations
+- **Webhooks** - Pre-rollout testing, load generation
+
+**Configuration:**
+```yaml
+# Canary Analysis Parameters
+interval: 1m              # Analysis frequency
+threshold: 5              # Min iterations before promotion
+maxWeight: 50             # Max canary traffic percentage
+stepWeight: 10            # Traffic increment per iteration
+
+metrics:
+  - request-success-rate  # Min 99%
+  - request-duration      # Max 500ms-2000ms
+  - error-rate           # Max 1%
+```
+
+### Prometheus & Grafana
+
+Full-stack observability:
+- **Prometheus** - Metrics collection and querying
+- **Grafana** - Visualization and dashboarding
+- **AlertManager** - Alert routing and notification
+- **ServiceMonitors** - Automatic service discovery
+
+**Key Metrics Collected:**
+- HTTP/gRPC request rates and latencies
+- Error rates and status codes
+- Resource utilization (CPU, memory)
+- Custom business metrics
+- Istio traffic metrics
 
 ---
 
 ## ⚙️ Configuration
 
-### Helm Values Hierarchy
+### Environment-Specific Values
 
-```mermaid
-graph TD
-    A[values.yaml<br/>Default Values] --> B[values-production.yaml<br/>Production Overrides]
-    A --> C[values-staging.yaml<br/>Staging Overrides]
-    A --> D[Custom values.yaml<br/>Your Overrides]
-    
-    B --> E[Final Configuration<br/>Production]
-    C --> F[Final Configuration<br/>Staging]
-    D --> G[Final Configuration<br/>Custom]
-    
-    style A fill:#3498DB
-    style B fill:#E74C3C
-    style C fill:#F39C12
-    style D fill:#9B59B6
-    style E fill:#27AE60
-    style F fill:#27AE60
-    style G fill:#27AE60
-```
+The chart supports multiple environments through value files:
+
+| File | Purpose | Replicas | Resources |
+|------|---------|----------|-----------|
+| `values.yaml` | Development defaults | 1 | Minimal (128Mi-512Mi) |
+| `values-staging.yaml` | Staging environment | 1-2 | Moderate (256Mi-1Gi) |
+| `values-production.yaml` | Production settings | 3-15 | High (512Mi-4Gi) |
 
 ### Key Configuration Sections
 
 <details>
-<summary><b>🌍 Global Settings</b></summary>
+<summary><b>📝 HelmRelease Configuration</b></summary>
 
 ```yaml
-global:
+# clusters/production/helmrelease.yaml
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: market-impact-analysis-system
+  namespace: flux-system
+spec:
+  interval: 5m0s
+  dependsOn:
+    - name: istiod  # Wait for service mesh
+  
+  chart:
+    spec:
+      chart: ./helm/market-impact-analysis-system
+      sourceRef:
+        kind: GitRepository
+        name: flux-system
+  
+  values:
+    global:
+      namespace: financial-news
+      environment: production
+      imageRegistry: yahyazakaria123
+      imagePullPolicy: Always
+    
+    # Override individual service configs
+    nlpProcessing:
+      replicaCount: 0  # Managed by HPA
+      autoscaling:
+        minReplicas: 3
+        maxReplicas: 10
+```
+</details>
+
+<details>
+<summary><b>🎯 Canary Configuration</b></summary>
+
+```yaml
+# clusters/production/canaries/nlp-processing-canary.yaml
+apiVersion: flagger.app/v1beta1
+kind: Canary
+metadata:
+  name: nlp-processing
   namespace: financial-news
-  environment: production
-  imageRegistry: your-registry
-  imagePullPolicy: IfNotPresent
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nlp-processing
+  
+  service:
+    port: 50052
+    portName: grpc
+    trafficPolicy:
+      tls:
+        mode: ISTIO_MUTUAL  # Automatic mTLS
+  
+  analysis:
+    interval: 1m
+    threshold: 5
+    maxWeight: 50
+    stepWeight: 10
+    
+    metrics:
+      - name: request-success-rate
+        thresholdRange:
+          min: 99
+      - name: request-duration
+        thresholdRange:
+          max: 2000  # 2 seconds for NLP
+    
+    webhooks:
+      - name: load-test
+        type: rollout
+        url: http://flagger-loadtester.financial-news/
+        metadata:
+          cmd: "hey -z 2m -q 5 -c 2 http://nlp-processing-canary:8080/health"
 ```
 </details>
 
 <details>
-<summary><b>🔔 Alert Signal Service</b></summary>
+<summary><b>🗄️ Database Configuration</b></summary>
 
 ```yaml
-alertSignal:
-  enabled: true
-  replicaCount: 3
-  resources:
-    requests:
-      memory: "512Mi"
-      cpu: "200m"
-    limits:
-      memory: "1Gi"
-      cpu: "1000m"
-  autoscaling:
-    minReplicas: 3
-    maxReplicas: 8
+# clusters/production/infrastructure/configs/db-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: db-config
+  namespace: financial-news
+data:
+  # Database names per service
+  NEWS_INGESTION_DB: "news_ingestion"
+  NLP_PROCESSING_DB: "nlp_processing"
+  MARKET_IMPACT_DB: "market_impact"
+  ALERTSIGNAL_DB: "alertsignal_db"
+  
+  # Connection settings
+  DATABASE_SSL_MODE: "require"  # For AWS RDS
+  DB_POOL_MAX_SIZE: "20"
+  DB_CONNECTION_TIMEOUT: "60000"
 ```
 </details>
-
-<details>
-<summary><b>📈 Market Impact Service</b></summary>
-
-```yaml
-marketImpact:
-  enabled: true
-  replicaCount: 3
-  resources:
-    requests:
-      memory: "1Gi"
-      cpu: "500m"
-    limits:
-      memory: "2Gi"
-      cpu: "1500m"
-```
-</details>
-
-<details>
-<summary><b>📰 News Ingestion Service</b></summary>
-
-```yaml
-newsIngestion:
-  enabled: true
-  replicaCount: 3
-  resources:
-    requests:
-      memory: "1Gi"
-      cpu: "500m"
-```
-</details>
-
-<details>
-<summary><b>🧠 NLP Processing Service</b></summary>
-
-```yaml
-nlpProcessing:
-  enabled: true
-  replicaCount: 5
-  resources:
-    requests:
-      memory: "2Gi"
-      cpu: "1000m"
-    limits:
-      memory: "4Gi"
-      cpu: "3000m"
-```
-</details>
-
-### Environment Comparison
-
-| Component | Development | Staging | Production |
-|-----------|------------|---------|------------|
-| **Replicas** | 1 | 1-2 | 3-15 |
-| **CPU Request** | 50m-250m | 100m-500m | 200m-1000m |
-| **Memory Request** | 128Mi-512Mi | 256Mi-1Gi | 512Mi-4Gi |
-| **Autoscaling** | Disabled | Limited | Full |
-| **Image Tag** | latest | staging | v1.0.0 |
 
 ---
 
 ## 🚢 Deployment
 
-### Deployment Flow
+### GitOps Deployment Flow
 
 ```mermaid
-graph LR
-    A[💻 Developer<br/>Push Code] --> B[🔄 Git Repository]
-    B --> C{🎯 Flux CD<br/>Watches Repo}
-    C --> D[📦 Helm Chart<br/>Detection]
-    D --> E[🔍 Validate<br/>Values & Templates]
-    E --> F{✅ Valid?}
-    F -->|Yes| G[🚀 Deploy to<br/>Kubernetes]
-    F -->|No| H[❌ Alert<br/>Admin]
-    G --> I[📊 Monitor<br/>Health]
-    I --> J{💚 Healthy?}
-    J -->|Yes| K[✨ Success]
-    J -->|No| L[🔄 Rollback]
+graph TB
+    A[👨‍💻 Push Image] --> B[📝 Update values.yaml]
+    B --> C[💾 Git Commit]
+    C --> D{🔄 Flux Detects}
+    
+    D --> E[📊 Reconcile HelmRelease]
+    E --> F[⚙️ Render Templates]
+    F --> G[☸️ Apply to Kubernetes]
+    
+    G --> H{🕸️ Istio Enabled?}
+    H -->|Yes| I[⚡ Flagger Detects]
+    H -->|No| J[✅ Direct Deploy]
+    
+    I --> K[🧪 Create Canary]
+    K --> L[📈 Analyze Metrics]
+    L --> M{✅ Pass?}
+    
+    M -->|Yes| N[📊 Shift Traffic]
+    N --> O{💯 100%?}
+    O -->|No| L
+    O -->|Yes| P[🎉 Promote]
+    
+    M -->|No| Q[🔄 Rollback]
+    
+    P --> R[✨ Success]
+    Q --> S[❌ Failed]
+    J --> R
     
     style A fill:#3498DB
-    style C fill:#9B59B6
-    style G fill:#27AE60
-    style K fill:#27AE60
-    style L fill:#E74C3C
+    style I fill:#FF6B6B
+    style P fill:#27AE60
+    style Q fill:#E74C3C
+    style R fill:#27AE60
+    style S fill:#E74C3C
 ```
 
-### Manual Deployment
+### Manual Deployment Options
 
 #### Option 1: Direct Helm Install
 
 ```bash
-# Install
+# Install with default values
+helm install market-impact ./helm/market-impact-analysis-system \
+  --namespace financial-news \
+  --create-namespace
+
+# Install with production values
 helm install market-impact ./helm/market-impact-analysis-system \
   --namespace financial-news \
   --create-namespace \
   --values ./helm/market-impact-analysis-system/values-production.yaml
 
-# Upgrade
+# Upgrade existing release
 helm upgrade market-impact ./helm/market-impact-analysis-system \
   --namespace financial-news \
   --values ./helm/market-impact-analysis-system/values-production.yaml
 
-# Rollback
+# Rollback to previous version
 helm rollback market-impact 1 --namespace financial-news
-
-# Uninstall
-helm uninstall market-impact --namespace financial-news
 ```
 
-#### Option 2: Template and Apply
+#### Option 2: Via FluxCD (Recommended)
 
 ```bash
-# Generate manifests
-helm template market-impact ./helm/market-impact-analysis-system \
-  --values ./helm/market-impact-analysis-system/values-production.yaml \
-  --output-dir ./rendered
+# Update image tag in helmrelease.yaml
+# Then commit and push
+git add clusters/production/helmrelease.yaml
+git commit -m "Deploy news-ingestion v1.2.0"
+git push origin main
 
-# Apply manually
-kubectl apply -f ./rendered/market-impact-analysis-system/templates/
+# Force immediate reconciliation (optional)
+flux reconcile source git flux-system
+flux reconcile helmrelease market-impact-analysis-system -n flux-system
+
+# Watch deployment
+flux logs --follow
+kubectl get pods -n financial-news -w
 ```
 
-### GitOps Deployment with Flux
+---
+
+## 🎯 Canary Deployments
+
+### Understanding Canary Releases
+
+Canary deployments gradually roll out changes to a small subset of users before rolling out to the entire infrastructure.
+
+**Benefits:**
+- ✅ Reduced blast radius of bugs
+- ✅ Automatic rollback on failures
+- ✅ Production validation before full rollout
+- ✅ Zero-downtime deployments
+
+### Canary Process
 
 ```mermaid
-sequenceDiagram
-    participant Dev as 👨‍💻 Developer
-    participant Git as 📚 Git Repo
-    participant Flux as 🔄 Flux CD
-    participant Helm as ⚙️ Helm
-    participant K8s as ☸️ Kubernetes
+graph LR
+    A[Stable v1.0] --> B[Deploy Canary v1.1]
+    B --> C{10% Traffic}
+    C --> D[Monitor 1min]
+    D --> E{Metrics OK?}
+    E -->|Yes| F{20% Traffic}
+    E -->|No| Z[Rollback]
+    F --> G[Monitor 1min]
+    G --> H{Metrics OK?}
+    H -->|Yes| I[... Continue]
+    H -->|No| Z
+    I --> J{100% Traffic}
+    J --> K[Promote Canary]
+    K --> L[Stable v1.1]
+    Z --> A
     
-    Dev->>Git: Push Changes
-    Git-->>Flux: Webhook/Poll
-    Flux->>Git: Fetch HelmRelease
-    Flux->>Helm: Render Chart
-    Helm->>Helm: Apply Values
-    Helm->>K8s: Deploy Manifests
-    K8s-->>Flux: Health Status
-    Flux-->>Dev: Notification
+    style A fill:#3498DB
+    style L fill:#27AE60
+    style Z fill:#E74C3C
 ```
 
-#### Setup Flux
+### Canary Configuration Example
+
+```yaml
+apiVersion: flagger.app/v1beta1
+kind: Canary
+metadata:
+  name: market-impact
+spec:
+  analysis:
+    interval: 1m           # Check every minute
+    threshold: 5           # Need 5 successful checks
+    maxWeight: 50          # Max 50% traffic to canary
+    stepWeight: 10         # Increase by 10% each step
+    
+    metrics:
+      # Success rate must be >= 99%
+      - name: request-success-rate
+        thresholdRange:
+          min: 99
+      
+      # Latency must be <= 1000ms
+      - name: request-duration
+        thresholdRange:
+          max: 1000
+      
+      # Custom metric: error rate <= 1%
+      - name: error-rate
+        templateRef:
+          name: error-rate
+          namespace: istio-system
+        thresholdRange:
+          max: 1
+    
+    webhooks:
+      # Run acceptance tests before rollout
+      - name: acceptance-test
+        type: pre-rollout
+        url: http://flagger-loadtester/
+        metadata:
+          type: bash
+          cmd: "curl -sf http://market-impact-canary:8082/health"
+      
+      # Generate load during rollout
+      - name: load-test
+        type: rollout
+        url: http://flagger-loadtester/
+        metadata:
+          cmd: "hey -z 1m -q 10 http://market-impact-primary:8082/health"
+```
+
+### Monitoring Canary Progress
 
 ```bash
-# Bootstrap Flux
-flux bootstrap github \
-  --owner=your-org \
-  --repository=market-impact-analysis-system \
-  --branch=main \
-  --path=clusters/production \
-  --personal
+# Watch canary status
+watch kubectl get canaries -n financial-news
 
-# Check Flux status
-flux get all
+# Check canary events
+kubectl describe canary nlp-processing -n financial-news
 
-# Force reconciliation
-flux reconcile helmrelease market-impact-analysis-system -n flux-system
+# View Flagger logs
+kubectl logs -n istio-system deploy/flagger -f
+
+# Check traffic split in Kiali
+# Open Kiali dashboard and navigate to Graph view
 ```
+
+### Canary Metrics
+
+Flagger tracks these key metrics:
+
+| Metric | Description | Threshold |
+|--------|-------------|-----------|
+| **Request Success Rate** | % of non-5xx responses | ≥ 99% |
+| **Request Duration** | P99 latency | ≤ 500ms-2000ms |
+| **Error Rate** | % of 5xx responses | ≤ 1% |
+| **CPU Usage** | Container CPU utilization | ≤ 80% |
+| **Memory Usage** | Container memory utilization | ≤ 80% |
 
 ---
 
 ## 🔄 GitOps Workflow
 
-### Continuous Deployment Pipeline
-
-```mermaid
-graph TB
-    subgraph "Development"
-        A[👨‍💻 Code Changes] --> B[🔀 Pull Request]
-        B --> C[✅ Review & Approve]
-    end
-    
-    subgraph "CI/CD"
-        C --> D[🏗️ Build Docker Images]
-        D --> E[🧪 Run Tests]
-        E --> F[📦 Push to Registry]
-    end
-    
-    subgraph "GitOps - Staging"
-        F --> G[📝 Update values-staging.yaml]
-        G --> H[💾 Commit to Git]
-        H --> I[🔄 Flux Detects Change]
-        I --> J[🚀 Deploy to Staging]
-        J --> K[🧪 Integration Tests]
-    end
-    
-    subgraph "GitOps - Production"
-        K -->|✅ Pass| L[📝 Update values-production.yaml]
-        L --> M[💾 Commit to Git]
-        M --> N[🔄 Flux Detects Change]
-        N --> O[🚀 Deploy to Production]
-        O --> P[📊 Monitor Metrics]
-    end
-    
-    P -->|❌ Issues| Q[🔄 Auto Rollback]
-    P -->|✅ Healthy| R[✨ Success]
-    
-    style A fill:#3498DB
-    style J fill:#F39C12
-    style O fill:#27AE60
-    style Q fill:#E74C3C
-    style R fill:#27AE60
-```
-
-### Promotion Flow
-
-```bash
-# 1. Deploy to Staging
-git checkout staging
-# Update values-staging.yaml with new image tags
-git add helm/market-impact-analysis-system/values-staging.yaml
-git commit -m "Deploy v1.2.0 to staging"
-git push origin staging
-# Flux automatically deploys to staging
-
-# 2. Test in Staging
-kubectl get pods -n financial-news-staging
-# Run integration tests
-
-# 3. Promote to Production
-git checkout main
-# Update values-production.yaml
-git add helm/market-impact-analysis-system/values-production.yaml
-git commit -m "Deploy v1.2.0 to production"
-git push origin main
-# Flux automatically deploys to production
-```
-
----
-
-## 🔀 Migration Guide
-
-### From Kustomize to Helm
+### Branch Strategy
 
 ```mermaid
 graph LR
-    A[📦 Kustomize<br/>Base + Overlays] --> B[🔄 Migration<br/>Script]
-    B --> C[⚙️ Helm Chart<br/>Templates + Values]
+    A[feature/new-service] --> B[develop]
+    B --> C[staging]
+    C --> D{Tests Pass?}
+    D -->|Yes| E[main]
+    D -->|No| B
+    E --> F[Production Deploy]
     
-    D[apps/base/] -.-> B
-    E[apps/production/] -.-> B
-    F[apps/staging/] -.-> B
+    style A fill:#3498DB
+    style B fill:#9B59B6
+    style C fill:#F39C12
+    style E fill:#27AE60
+    style F fill:#27AE60
+```
+
+### Promotion Workflow
+
+```bash
+# 1. Develop and test locally
+docker build -t your-registry/news-ingestion:v1.2.0 .
+docker push your-registry/news-ingestion:v1.2.0
+
+# 2. Update staging
+git checkout staging
+vim clusters/production/helmrelease.yaml
+# Change image tag: "v1.2.0"
+git add clusters/production/helmrelease.yaml
+git commit -m "Deploy news-ingestion v1.2.0 to staging"
+git push origin staging
+
+# 3. Verify in staging
+flux reconcile helmrelease market-impact-analysis-system -n flux-system
+kubectl get canaries -n financial-news
+# Monitor canary progress
+
+# 4. Promote to production
+git checkout main
+git merge staging
+git push origin main
+# Flux automatically deploys to production with canary analysis
+```
+
+### Flux Directory Structure
+
+```yaml
+clusters/production/
+├── flux-system/           # Flux controllers
+├── infrastructure/        # Platform components (deployed first)
+│   ├── istio/            # → Deployed 1st
+│   ├── monitoring/        # → Deployed 2nd
+│   ├── flagger/          # → Deployed 3rd
+│   ├── configs/          # → Deployed 4th
+│   └── secrets/          # → Deployed 5th
+├── helmrelease.yaml      # → Application deployed 6th
+└── canaries/             # → Canaries deployed last (after Flagger CRDs)
+```
+
+### Flux Dependencies
+
+```yaml
+# HelmRelease depends on infrastructure
+spec:
+  dependsOn:
+    - name: istiod  # Wait for service mesh
     
-    B -.-> G[helm/templates/]
-    B -.-> H[values-production.yaml]
-    B -.-> I[values-staging.yaml]
-    
-    style A fill:#E74C3C
-    style B fill:#F39C12
-    style C fill:#27AE60
-```
-
-### Step-by-Step Migration
-
-#### 1. Run Migration Script
-
-```bash
-# Make script executable
-chmod +x migrate-to-helm.sh
-
-# Run migration
-./migrate-to-helm.sh
-```
-
-The script will:
-- ✅ Validate prerequisites
-- ✅ Backup existing Kustomize files
-- ✅ Create Helm chart structure
-- ✅ Validate Helm templates
-- ✅ Render manifests for review
-- ✅ Optionally deploy to staging
-
-#### 2. Review Generated Manifests
-
-```bash
-# Check rendered templates
-tree rendered-manifests/
-
-# Compare with existing deployments
-kubectl get deployment news-ingestion -n financial-news -o yaml
-helm template market-impact ./helm/market-impact-analysis-system \
-  --values values-production.yaml | grep -A 20 "kind: Deployment"
-```
-
-#### 3. Update Flux Configuration
-
-```bash
-# Remove old Kustomization
-kubectl delete kustomization apps -n flux-system
-
-# Apply new HelmRelease
-kubectl apply -f clusters/production/helmrelease.yaml
-```
-
-#### 4. Verify Migration
-
-```bash
-# Check Flux status
-flux get helmreleases
-
-# Monitor deployment
-watch kubectl get pods -n financial-news
-
-# Verify services
-kubectl get svc -n financial-news
+# Canaries depend on HelmRelease
+metadata:
+  name: canaries
+spec:
+  dependsOn:
+    - name: flux-system  # Wait for Flagger to install CRDs
+  healthChecks:
+    - kind: Deployment
+      name: flagger
+      namespace: istio-system
 ```
 
 ---
 
-## 📊 Monitoring & Troubleshooting
+## 📊 Monitoring & Observability
 
-### Health Checks
+### Observability Stack
 
 ```mermaid
-graph TD
-    A[🏥 Health Check System] --> B{Service Type}
+graph TB
+    subgraph "Application Services"
+        App1[News Ingestion]
+        App2[NLP Processing]
+        App3[Market Impact]
+        App4[Alert Signal]
+    end
     
-    B -->|HTTP| C[HTTP Services]
-    B -->|gRPC| D[gRPC Services]
+    subgraph "Service Mesh"
+        Envoy1[Envoy Sidecar]
+        Envoy2[Envoy Sidecar]
+        Envoy3[Envoy Sidecar]
+        Envoy4[Envoy Sidecar]
+    end
     
-    C --> E[Liveness Probe<br/>/actuator/health]
-    C --> F[Readiness Probe<br/>/actuator/health]
+    subgraph "Metrics Collection"
+        Prometheus[📊 Prometheus]
+        ServiceMonitor[ServiceMonitor CRD]
+    end
     
-    D --> G[gRPC Health Probe<br/>grpc_health_probe]
+    subgraph "Visualization"
+        Grafana[📈 Grafana]
+        Kiali[🕸️ Kiali]
+    end
     
-    E -->|Fails| H[🔄 Restart Pod]
-    F -->|Fails| I[⛔ Remove from Service]
-    G -->|Fails| H
+    App1 --> Envoy1
+    App2 --> Envoy2
+    App3 --> Envoy3
+    App4 --> Envoy4
     
-    style A fill:#3498DB
-    style H fill:#E74C3C
-    style I fill:#F39C12
+    Envoy1 -.->|Expose /metrics| Prometheus
+    Envoy2 -.->|Expose /metrics| Prometheus
+    Envoy3 -.->|Expose /metrics| Prometheus
+    Envoy4 -.->|Expose /metrics| Prometheus
+    
+    ServiceMonitor -.->|Configure| Prometheus
+    
+    Prometheus --> Grafana
+    Prometheus --> Kiali
+    
+    style Prometheus fill:#E64759
+    style Grafana fill:#F46800
+    style Kiali fill:#009ABD
 ```
 
-### Common Commands
+### Access Dashboards
 
 ```bash
-# 📊 View all resources
-kubectl get all -n financial-news
+# Kiali - Service Mesh Visualization
+kubectl port-forward -n istio-system svc/kiali 20001:20001
+# URL: http://localhost:20001/kiali
 
-# 🔍 Check pod status
-kubectl get pods -n financial-news -o wide
+# Grafana - Metrics Dashboard
+kubectl port-forward -n monitoring svc/monitoring-grafana 3000:80
+# URL: http://localhost:3000
+# Default credentials: admin / admin
 
-# 📝 View logs
-kubectl logs -f deployment/news-ingestion -n financial-news
-kubectl logs -f deployment/nlp-processing -n financial-news --tail=100
-
-# 🔧 Debug pod
-kubectl describe pod <pod-name> -n financial-news
-kubectl exec -it <pod-name> -n financial-news -- /bin/bash
-
-# 📈 Check HPA status
-kubectl get hpa -n financial-news
-kubectl describe hpa nlp-processing -n financial-news
-
-# 🔄 Check Helm releases
-helm list -n financial-news
-helm status market-impact -n financial-news
-helm history market-impact -n financial-news
-
-# 🎯 Flux troubleshooting
-flux get sources git
-flux get helmreleases
-flux logs --level=error
-kubectl describe helmrelease market-impact-analysis-system -n flux-system
+# Prometheus - Raw Metrics
+kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
+# URL: http://localhost:9090
 ```
 
-### Troubleshooting Decision Tree
+### Key Dashboards
 
-```mermaid
-graph TD
-    A[❓ Issue Detected] --> B{What's Wrong?}
-    
-    B -->|Pod CrashLooping| C[Check Logs]
-    B -->|Service Unavailable| D[Check Endpoints]
-    B -->|High Resource Usage| E[Check Metrics]
-    B -->|Flux Not Deploying| F[Check HelmRelease]
-    
-    C --> G{Error Found?}
-    G -->|Config Error| H[Fix Values]
-    G -->|Image Error| I[Check Image Tag]
-    G -->|Secret Missing| J[Create Secret]
-    
-    D --> K{Endpoints Empty?}
-    K -->|Yes| L[Check Pod Labels]
-    K -->|No| M[Check Network Policy]
-    
-    E --> N{Exceeds Limits?}
-    N -->|Yes| O[Increase Resources]
-    N -->|No| P[Check Application]
-    
-    F --> Q{Validation Error?}
-    Q -->|Yes| R[Fix Template/Values]
-    Q -->|No| S[Check Flux Logs]
-    
-    style A fill:#E74C3C
-    style H fill:#27AE60
-    style I fill:#27AE60
-    style J fill:#27AE60
-    style O fill:#27AE60
-    style R fill:#27AE60
+**Kiali Features:**
+- Real-time service graph
+- Traffic flow visualization
+- Request rates and latencies
+- Circuit breaker status
+- mTLS verification
+
+**Grafana Dashboards:**
+- Kubernetes cluster overview
+- Istio service mesh metrics
+- Application-specific metrics
+- JVM metrics (Spring Boot services)
+- Go runtime metrics
+
+### Custom Metrics
+
+The system exposes custom business metrics:
+
+```yaml
+# Spring Boot Services (Market Impact, Alert Signal)
+/actuator/prometheus:
+  - market_impact_score_histogram
+  - alert_signal_count
+  - database_connection_pool_active
+  
+# Go Services (News Ingestion, NLP Processing)
+/metrics:
+  - news_articles_processed_total
+  - nlp_sentiment_analysis_duration_seconds
+  - grpc_server_handled_total
+```
+
+---
+
+## 🔍 Troubleshooting
+
+### Common Issues & Solutions
+
+<details>
+<summary><b>❌ Canary Stuck in "Progressing" State</b></summary>
+
+**Symptoms:**
+- Canary stays at low traffic percentage
+- No promotion or rollback occurring
+
+**Diagnosis:**
+```bash
+# Check canary status
+kubectl describe canary <service-name> -n financial-news
+
+# Check Flagger logs
+kubectl logs -n istio-system deploy/flagger -f
+
+# Verify metrics are being collected
+kubectl port-forward -n monitoring svc/monitoring-kube-prometheus-prometheus 9090:9090
+# Query: rate(istio_requests_total{destination_workload="<service-name>"}[1m])
+```
+
+**Common Causes:**
+1. **No traffic reaching service** - Add load test webhook
+2. **Metrics threshold too strict** - Adjust thresholds in canary spec
+3. **Prometheus scraping failed** - Check ServiceMonitor configuration
+
+**Solution:**
+```yaml
+# Add load test webhook to generate traffic
+webhooks:
+  - name: load-test
+    type: rollout
+    url: http://flagger-loadtester.financial-news/
+    metadata:
+      cmd: "hey -z 2m -q 10 http://<service>-primary:8080/health"
+```
+</details>
+
+<details>
+<summary><b>❌ Pods CrashLooping</b></summary>
+
+**Diagnosis:**
+```bash
+# Check pod status
+kubectl get pods -n financial-news
+
+# View logs
+kubectl logs <pod-name> -n financial-news --previous
+
+# Check events
+kubectl describe pod <pod-name> -n financial-news
+```
+
+**Common Causes:**
+1. **Database connection failed** - Verify db-credentials secret
+2. **Redis connection failed** - Check redis-credentials secret
+3. **Memory limit too low** - Increase resources in values.yaml
+4. **Liveness probe failing** - Increase initialDelaySeconds
+
+**Solutions:**
+```bash
+# Verify secrets exist
+kubectl get secrets -n financial-news
+
+# Check secret values
+kubectl get secret db-credentials -n financial-news -o yaml
+
+# Increase probe delays
+livenessProbe:
+  initialDelaySeconds: 90  # Increase from 30
+  periodSeconds: 10
+```
+</details>
+
+<details>
+<summary><b>❌ Service Mesh Issues</b></summary>
+
+**Symptoms:**
+- Services can't communicate
+- mTLS errors in logs
+- Traffic not flowing through Istio
+
+**Diagnosis:**
+```bash
+# Check Istio injection
+kubectl get namespace financial-news -o yaml | grep istio-injection
+
+# Verify sidecar injection
+kubectl get pod <pod-name> -n financial-news -o jsonpath='{.spec.containers[*].name}'
+# Should see: <app-name>, istio-proxy
+
+# Check Istio proxy logs
+kubectl logs <pod-name> -n financial-news -c istio-proxy
+```
+
+**Solutions:**
+```bash
+# Enable Istio injection on namespace
+kubectl label namespace financial-news istio-injection=enabled
+
+# Restart pods to inject sidecars
+kubectl rollout restart deployment/<service-name> -n financial-news
+
+# Verify mTLS status in Kiali dashboard
+```
+</details>
+
+<details>
+<summary><b>❌ Flux Not Reconciling</b></summary>
+
+**Diagnosis:**
+```bash
+# Check Flux status
+flux get all
+
+# Check specific HelmRelease
+flux get helmrelease market-impact-analysis-system -n flux-system
+
+# View Flux logs
+flux logs --level=error
+```
+
+**Common Issues:**
+1. **Git authentication failed** - Verify flux-system secret
+2. **Invalid Helm values** - Run `helm template` locally to validate
+3. **Dependencies not ready** - Check dependsOn in HelmRelease
+
+**Solutions:**
+```bash
+# Force reconciliation
+flux reconcile source git flux-system
+flux reconcile helmrelease market-impact-analysis-system -n flux-system
+
+# Suspend and resume to reset
+flux suspend helmrelease market-impact-analysis-system -n flux-system
+flux resume helmrelease market-impact-analysis-system -n flux-system
+```
+</details>
+
+### Debugging Commands
+
+```bash
+# === Pod Debugging ===
+kubectl get pods -n financial-news -o wide
+kubectl describe pod <pod-name> -n financial-news
+kubectl logs <pod-name> -n financial-news -f
+kubectl logs <pod-name> -n financial-news -c istio-proxy  # Sidecar logs
+kubectl exec -it <pod-name> -n financial-news -- /bin/bash
+
+# === Service Debugging ===
+kubectl get svc -n financial-news
+kubectl describe svc <service-name> -n financial-news
+kubectl get endpoints <service-name> -n financial-news
+
+# === Canary Debugging ===
+kubectl get canaries -n financial-news
+kubectl describe canary <canary-name> -n financial-news
+kubectl get events -n financial-news --field-selector involvedObject.kind=Canary
+
+# === Flux Debugging ===
+flux get sources git
+flux get helmreleases -A
+flux logs --follow --level=error
+kubectl describe helmrelease market-impact-analysis-system -n flux-system
+
+# === Istio Debugging ===
+istioctl analyze -n financial-news
+istioctl proxy-status
+kubectl get virtualservices,destinationrules -n financial-news
 ```
 
 ---
 
 ## 💡 Best Practices
 
-### 🎯 Configuration Management
+### 🎯 Deployment Best Practices
 
 ```yaml
-# ✅ DO: Use values files for environment-specific config
-helm install app ./chart -f values-production.yaml
-
-# ❌ DON'T: Use --set for complex configurations
-helm install app ./chart --set image.tag=v1.0.0 --set replicas=3...
-```
-
-### 🔒 Security
-
-- 🔐 **Never commit secrets** to Git
-- 🎭 Use **Sealed Secrets** or **External Secrets Operator**
-- 🛡️ Enable **Pod Security Policies**
-- 🔍 Regularly **scan images** for vulnerabilities
-
-### 📊 Resource Management
-
-```yaml
-# Always set resource requests and limits
+# ✅ DO: Always set resource limits
 resources:
-  requests:    # Guaranteed resources
+  requests:    # Guaranteed
     memory: "512Mi"
     cpu: "250m"
-  limits:      # Maximum allowed
+  limits:      # Maximum
     memory: "1Gi"
     cpu: "1000m"
-```
 
-### 🔄 Deployment Strategy
-
-```mermaid
-graph LR
-    A[Development] -->|Test| B[Staging]
-    B -->|Validate| C[Production Canary]
-    C -->|Monitor| D[Production Full]
-    
-    D -->|Issues?| E[Rollback]
-    E -->|Fix| A
-    
-    style A fill:#3498DB
-    style B fill:#F39C12
-    style C fill:#E67E22
-    style D fill:#27AE60
-    style E fill:#E74C3C
-```
-
-### 📝 Version Control
-
-```bash
-# Semantic versioning for chart
-Chart.yaml:
-  version: 1.2.3  # MAJOR.MINOR.PATCH
-
-# Tag Docker images
+# ✅ DO: Use specific image tags
 image:
-  tag: v1.2.3    # Not 'latest' in production
+  tag: "v1.2.3"  # Not "latest"
+
+# ✅ DO: Configure health checks
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8080
+  initialDelaySeconds: 60
+
+# ❌ DON'T: Use excessively low probe delays
+livenessProbe:
+  initialDelaySeconds: 5  # Too low for Java apps
 ```
+
+### 🔒 Security Best Practices
+
+- ✅ **Use Sealed Secrets** for production (not plain Kubernetes Secrets)
+- ✅ **Enable mTLS** between all services (handled by Istio)
+- ✅ **Use Network Policies** to restrict traffic
+- ✅ **Scan images** for vulnerabilities in CI/CD
+- ✅ **Rotate secrets** regularly
+- ❌ **Never commit** secrets to Git
+
+### 📊 Monitoring Best Practices
+
+- ✅ **Set up alerts** for critical metrics
+- ✅ **Monitor canary deployments** closely in Kiali
+- ✅ **Review Grafana dashboards** regularly
+- ✅ **Set up log aggregation** (ELK/Loki)
+- ✅ **Define SLOs/SLIs** for each service
+
+### 🔄 GitOps Best Practices
+
+- ✅ **One environment per branch** (main=prod, staging=staging)
+- ✅ **Use PR reviews** for production changes
+- ✅ **Test in staging** before promoting to production
+- ✅ **Keep infrastructure** separate from application config
+- ✅ **Document** rollback procedures
 
 ---
 
@@ -873,44 +1237,59 @@ image:
 
 ### 📖 Documentation
 
-- [Helm Official Docs](https://helm.sh/docs/)
 - [Kubernetes Documentation](https://kubernetes.io/docs/)
-- [Flux CD Documentation](https://fluxcd.io/docs/)
-- [Kustomize to Helm Migration](https://helm.sh/docs/topics/charts/#kustomize)
+- [Helm Documentation](https://helm.sh/docs/)
+- [FluxCD Documentation](https://fluxcd.io/docs/)
+- [Istio Documentation](https://istio.io/latest/docs/)
+- [Flagger Documentation](https://docs.flagger.app/)
+- [Prometheus Documentation](https://prometheus.io/docs/)
 
 ### 🎓 Learning Resources
 
-- [Helm Workshop](https://helm.sh/docs/intro/quickstart/)
-- [GitOps Principles](https://www.gitops.tech/)
-- [Kubernetes Patterns](https://kubernetes.io/docs/concepts/cluster-administration/manage-deployment/)
+- [Istio by Example](https://istiobyexample.dev/)
+- [GitOps Toolkit](https://toolkit.fluxcd.io/)
+- [Progressive Delivery with Flagger](https://www.weave.works/blog/flagger)
+- [Kubernetes Best Practices](https://kubernetes.io/docs/concepts/configuration/overview/)
 
-### 🛠️ Tools
+### 🛠️ Useful Tools
 
 | Tool | Purpose | Link |
 |------|---------|------|
-| **k9s** | Terminal UI for Kubernetes | [k9scli.io](https://k9scli.io/) |
+| **k9s** | Kubernetes TUI | [k9scli.io](https://k9scli.io/) |
 | **Lens** | Kubernetes IDE | [k8slens.dev](https://k8slens.dev/) |
-| **Helm Dashboard** | Web UI for Helm | [github.com/komodorio/helm-dashboard](https://github.com/komodorio/helm-dashboard) |
+| **kubectx** | Context switching | [github.com/ahmetb/kubectx](https://github.com/ahmetb/kubectx) |
+| **Helm Dashboard** | Helm web UI | [github.com/komodorio/helm-dashboard](https://github.com/komodorio/helm-dashboard) |
+| **stern** | Multi-pod logs | [github.com/stern/stern](https://github.com/stern/stern) |
 
 ---
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md).
+We welcome contributions! Please follow these guidelines:
 
-```mermaid
-graph LR
-    A[🍴 Fork] --> B[🔧 Create Branch]
-    B --> C[💻 Make Changes]
-    C --> D[✅ Test]
-    D --> E[📝 Commit]
-    E --> F[🚀 Push]
-    F --> G[🔀 Pull Request]
-    G --> H[👀 Review]
-    H --> I[✨ Merge]
-    
-    style A fill:#3498DB
-    style I fill:#27AE60
+1. 🍴 **Fork** the repository
+2. 🔧 **Create** a feature branch (`git checkout -b feature/amazing-feature`)
+3. 💻 **Make** your changes
+4. ✅ **Test** thoroughly (run `helm template` and `helm lint`)
+5. 📝 **Commit** (`git commit -m 'Add amazing feature'`)
+6. 🚀 **Push** (`git push origin feature/amazing-feature`)
+7. 🔀 **Open** a Pull Request
+
+### Development Workflow
+
+```bash
+# Local testing
+helm template market-impact ./helm/market-impact-analysis-system \
+  --values ./helm/market-impact-analysis-system/values.yaml \
+  --debug
+
+# Linting
+helm lint ./helm/market-impact-analysis-system
+
+# Dry-run installation
+helm install market-impact ./helm/market-impact-analysis-system \
+  --namespace financial-news \
+  --dry-run --debug
 ```
 
 ---
@@ -921,6 +1300,18 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
+## 🙏 Acknowledgments
+
+- **Kubernetes** team for the amazing orchestration platform
+- **CNCF** projects: Helm, Flux, Prometheus, Istio
+- **Weaveworks** for Flagger progressive delivery
+- **Community contributors** who make cloud-native possible
+
+---
+
+<div align="center">
+
+**Built with ❤️ for Cloud-Native Financial Analytics**
 
 [🏠 Home](#-market-impact-analysis-system) • [⬆ Back to Top](#-market-impact-analysis-system)
 
