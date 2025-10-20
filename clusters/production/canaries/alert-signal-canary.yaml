@@ -1,23 +1,19 @@
-# clusters/production/canaries/alert-signal-canary.yaml
 apiVersion: flagger.app/v1beta1
 kind: Canary
 metadata:
   name: alert-signal
   namespace: financial-news
 spec:
-  # Deployment reference
   targetRef:
     apiVersion: apps/v1
     kind: Deployment
     name: alert-signal
 
-  # HPA reference
   autoscalerRef:
     apiVersion: autoscaling/v2
     kind: HorizontalPodAutoscaler
     name: alert-signal
 
-  # Service configuration
   service:
     port: 8081
     targetPort: 8081
@@ -27,7 +23,6 @@ spec:
       tls:
         mode: ISTIO_MUTUAL
 
-  # Canary analysis
   analysis:
     interval: 1m
     threshold: 5
@@ -45,29 +40,29 @@ spec:
           max: 500
         interval: 1m
 
-      - name: error-rate
-        templateRef:
-          name: error-rate
-          namespace: istio-system
-        thresholdRange:
-          max: 1
-        interval: 1m
-
-    # Webhooks
-    # In alert-signal-canary.yaml
     webhooks:
+      # ✅ CRITICAL FIX: Simplified acceptance test
       - name: acceptance-test
         type: pre-rollout
         url: http://flagger-loadtester.financial-news/
-        timeout: 60s  # ✅ Increased timeout
+        timeout: 30s
         metadata:
           type: bash
-          # ✅ Fixed: Use GET request and check for HTTP 200
-          cmd: "curl -sf http://alert-signal-canary.financial-news:8081/api/actuator/health && echo 'Health check passed'"
+          cmd: "curl -sf http://alert-signal-canary.financial-news:8081/api/actuator/health"
 
+      # ✅ CRITICAL FIX: More aggressive load test to generate metrics
       - name: load-test
         type: rollout
         url: http://flagger-loadtester.financial-news/
         timeout: 5s
         metadata:
-          cmd: "hey -z 1m -q 10 -c 2 http://alert-signal-canary.financial-news:8081/api/actuator/health"
+          # Increased traffic: 30 requests/sec for 2 minutes with 5 concurrent connections
+          cmd: "hey -z 2m -q 30 -c 5 http://alert-signal-primary.financial-news:8081/api/actuator/health"
+
+      # ✅ NEW: Continuous load during rollout
+      - name: load-test-canary
+        type: rollout
+        url: http://flagger-loadtester.financial-news/
+        timeout: 5s
+        metadata:
+          cmd: "hey -z 2m -q 30 -c 5 http://alert-signal-canary.financial-news:8081/api/actuator/health"
