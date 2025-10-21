@@ -56,7 +56,7 @@ spec:
 
     marketImpact:
       enabled: true
-      replicaCount: 0
+      replicaCount: 1
       image:
         repository: market-impact-analysis-system-market-impact-service
         tag: "9"
@@ -92,7 +92,7 @@ spec:
 
     nlpProcessing:
       enabled: true
-      replicaCount: 0
+      replicaCount: 1
       image:
         repository: market-impact-analysis-system-nlp-processing-service
         tag: 4
