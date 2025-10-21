@@ -78,4 +78,4 @@ spec:
         url: http://flagger-loadtester.financial-news/
         timeout: 5s
         metadata:
-          cmd: "hey -z 2m -q 5 -c 2 http://nlp-processing-canary.financial-news:8080/health"
+          cmd: "hey -z 1m -q 10 -c 2 http://nlp-processing-canary.financial-news:8080/health"

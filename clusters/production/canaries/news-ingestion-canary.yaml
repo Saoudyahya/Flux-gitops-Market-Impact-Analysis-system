@@ -48,6 +48,7 @@ spec:
           max: 1
         interval: 1m
 
+
     webhooks:
       # ✅ FIXED: More lenient health check
       - name: acceptance-test
