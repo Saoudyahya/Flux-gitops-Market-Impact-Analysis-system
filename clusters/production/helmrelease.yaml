@@ -95,7 +95,7 @@ spec:
       replicaCount: 1
       image:
         repository: market-impact-analysis-system-nlp-processing-service
-        tag: "5"
+        tag: "6"
       resources:
         requests:
           memory: "1Gi"
