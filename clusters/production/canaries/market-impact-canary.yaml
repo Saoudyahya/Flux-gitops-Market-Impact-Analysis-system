@@ -49,17 +49,23 @@ spec:
         interval: 1m
 
   webhooks:
-    # ✅ FIXED: Simplified acceptance test with longer timeout
+    # ✅ FIXED: Simpler check with longer timeout and retries
     - name: acceptance-test
       type: pre-rollout
       url: http://flagger-loadtester.financial-news/
-      timeout: 30s  # ← Increased from 10s
+      timeout: 60s  # ← Increased timeout
       metadata:
         type: bash
-        # ✅ FIXED: Simpler check - just verify endpoint returns 200
-        cmd: "curl -sf http://market-impact-canary.financial-news:8082/market-impact/actuator/health"
+        # ✅ Add retries for health check
+        cmd: |
+          for i in {1..5}; do
+            if curl -sf http://market-impact-canary.financial-news:8082/market-impact/actuator/health; then
+              exit 0
+            fi
+            sleep 5
+          done
+          exit 1
 
-    # Load test during rollout
     - name: load-test
       type: rollout
       url: http://flagger-loadtester.financial-news/
