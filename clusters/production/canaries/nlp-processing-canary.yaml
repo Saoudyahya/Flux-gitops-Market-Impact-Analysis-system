@@ -15,14 +15,11 @@ spec:
     name: nlp-processing
 
   service:
-    # ✅ FIXED: Define both ports as an array
-    ports:
-      - name: grpc
-        port: 50052
-        targetPort: 50052
-      - name: http
-        port: 8080
-        targetPort: 8080
+    # ❌ REMOVE: ports array (not supported)
+    # ✅ USE: Single port definition
+    port: 50052
+    targetPort: 50052
+    portName: grpc
     portDiscovery: true
     trafficPolicy:
       tls:
@@ -62,7 +59,6 @@ spec:
         interval: 1m
 
     webhooks:
-      # ✅ FIXED: Simpler health check without grep
       - name: acceptance-test
         type: pre-rollout
         url: http://flagger-loadtester.financial-news/
@@ -71,7 +67,6 @@ spec:
           type: bash
           cmd: "curl -sf http://nlp-processing-canary.financial-news:8080/health"
 
-      # ✅ FIXED: Use HTTP health endpoint for load test
       - name: load-test
         type: rollout
         url: http://flagger-loadtester.financial-news/
