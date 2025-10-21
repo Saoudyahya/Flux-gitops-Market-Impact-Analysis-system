@@ -5,7 +5,7 @@ metadata:
   namespace: flux-system
 spec:
   interval: 5m0s
-  dependsOn: # ✅ ADD THIS
+  dependsOn: # ? ADD THIS
     - name: istiod
       namespace: flux-system
   chart:
@@ -59,7 +59,7 @@ spec:
       replicaCount: 1
       image:
         repository: market-impact-analysis-system-market-impact-service
-        tag: "11"
+        tag: "9"
       resources:
         requests:
           memory: "512Mi"
@@ -95,7 +95,7 @@ spec:
       replicaCount: 1
       image:
         repository: market-impact-analysis-system-nlp-processing-service
-        tag: "5"
+        tag: 4
       resources:
         requests:
           memory: "1Gi"
