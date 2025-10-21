@@ -49,18 +49,28 @@ spec:
         interval: 1m
 
     webhooks:
-      # ✅ FIXED: Simplified to single-line command
       - name: acceptance-test
         type: pre-rollout
         url: http://flagger-loadtester.financial-news/
         timeout: 60s
         metadata:
           type: bash
-          cmd: "curl -sf http://market-impact-canary.financial-news:8082/market-impact/actuator/health || sleep 5 && curl -sf http://market-impact-canary.financial-news:8082/market-impact/actuator/health"
+          cmd: "curl -sf http://market-impact-canary.financial-news:8082/market-impact/actuator/health"
 
+      # ✅ FIXED: More aggressive load test
       - name: load-test
         type: rollout
         url: http://flagger-loadtester.financial-news/
         timeout: 5s
         metadata:
-          cmd: "hey -z 1m -q 10 -c 2 http://market-impact-canary.financial-news:8082/market-impact/actuator/health"
+          # Increased from -q 10 to -q 30 (30 requests/sec)
+          # Increased from -c 2 to -c 5 (5 concurrent connections)
+          cmd: "hey -z 2m -q 30 -c 5 http://market-impact-primary.financial-news:8082/market-impact/actuator/health"
+
+      # ✅ NEW: Also generate traffic to canary
+      - name: load-test-canary
+        type: rollout
+        url: http://flagger-loadtester.financial-news/
+        timeout: 5s
+        metadata:
+          cmd: "hey -z 2m -q 30 -c 5 http://market-impact-canary.financial-news:8082/market-impact/actuator/health"
