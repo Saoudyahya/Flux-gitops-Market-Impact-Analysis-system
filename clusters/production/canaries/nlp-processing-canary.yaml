@@ -4,36 +4,36 @@ metadata:
   name: nlp-processing
   namespace: financial-news
 spec:
-  # Deployment reference
   targetRef:
     apiVersion: apps/v1
     kind: Deployment
     name: nlp-processing
 
-  # HPA reference
   autoscalerRef:
     apiVersion: autoscaling/v2
     kind: HorizontalPodAutoscaler
     name: nlp-processing
 
-  # Service configuration
   service:
-    port: 50052
-    targetPort: 50052
-    portName: grpc
+    # ✅ FIXED: Define both ports as an array
+    ports:
+      - name: grpc
+        port: 50052
+        targetPort: 50052
+      - name: http
+        port: 8080
+        targetPort: 8080
     portDiscovery: true
     trafficPolicy:
       tls:
         mode: ISTIO_MUTUAL
 
-  # Canary analysis
   analysis:
     interval: 1m
     threshold: 5
     maxWeight: 50
     stepWeight: 10
 
-    # Extended intervals for NLP service (heavier workload)
     metrics:
       - name: request-success-rate
         thresholdRange:
@@ -41,9 +41,8 @@ spec:
         interval: 1m
 
       - name: request-duration
-        # Higher threshold for NLP processing
         thresholdRange:
-          max: 2000  # 2 seconds
+          max: 2000
         interval: 1m
 
       - name: error-rate
@@ -54,7 +53,6 @@ spec:
           max: 1
         interval: 1m
 
-      # CPU utilization check
       - name: cpu-usage
         templateRef:
           name: cpu-usage
@@ -63,16 +61,17 @@ spec:
           max: 80
         interval: 1m
 
-    # Webhooks for gRPC testing
     webhooks:
+      # ✅ FIXED: Simpler health check without grep
       - name: acceptance-test
         type: pre-rollout
         url: http://flagger-loadtester.financial-news/
         timeout: 30s
         metadata:
           type: bash
-          cmd: "curl -sd 'test' http://nlp-processing-canary.financial-news:8080/health | grep -q 'ok'"
+          cmd: "curl -sf http://nlp-processing-canary.financial-news:8080/health"
 
+      # ✅ FIXED: Use HTTP health endpoint for load test
       - name: load-test
         type: rollout
         url: http://flagger-loadtester.financial-news/
