@@ -48,27 +48,19 @@ spec:
           max: 1
         interval: 1m
 
-  webhooks:
-    # ✅ FIXED: Simpler check with longer timeout and retries
-    - name: acceptance-test
-      type: pre-rollout
-      url: http://flagger-loadtester.financial-news/
-      timeout: 60s  # ← Increased timeout
-      metadata:
-        type: bash
-        # ✅ Add retries for health check
-        cmd: |
-          for i in {1..5}; do
-            if curl -sf http://market-impact-canary.financial-news:8082/market-impact/actuator/health; then
-              exit 0
-            fi
-            sleep 5
-          done
-          exit 1
+    webhooks:
+      # ✅ FIXED: Simplified to single-line command
+      - name: acceptance-test
+        type: pre-rollout
+        url: http://flagger-loadtester.financial-news/
+        timeout: 60s
+        metadata:
+          type: bash
+          cmd: "curl -sf http://market-impact-canary.financial-news:8082/market-impact/actuator/health || sleep 5 && curl -sf http://market-impact-canary.financial-news:8082/market-impact/actuator/health"
 
-    - name: load-test
-      type: rollout
-      url: http://flagger-loadtester.financial-news/
-      timeout: 5s
-      metadata:
-        cmd: "hey -z 1m -q 10 -c 2 http://market-impact-canary.financial-news:8082/market-impact/actuator/health"
+      - name: load-test
+        type: rollout
+        url: http://flagger-loadtester.financial-news/
+        timeout: 5s
+        metadata:
+          cmd: "hey -z 1m -q 10 -c 2 http://market-impact-canary.financial-news:8082/market-impact/actuator/health"
