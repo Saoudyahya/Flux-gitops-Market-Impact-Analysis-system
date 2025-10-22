@@ -1,0 +1,77 @@
+# clusters/production/infrastructure/ingress/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: financial-news-ingress
+  namespace: financial-news
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    # SSL/TLS
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"  # if using cert-manager
+    # Rate limiting
+    nginx.ingress.kubernetes.io/limit-rps: "100"
+    # Timeouts
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    # CORS (if needed)
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+spec:
+  ingressClassName: nginx
+  rules:
+    # Alert Signal Service
+    - host: api.yourdomain.com  # Change to your domain
+      http:
+        paths:
+          - path: /api(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: alert-signal
+                port:
+                  number: 8081
+
+    # Market Impact Service
+    - host: api.yourdomain.com
+      http:
+        paths:
+          - path: /market-impact(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: market-impact
+                port:
+                  number: 8082
+
+    # News Ingestion Service
+    - host: api.yourdomain.com
+      http:
+        paths:
+          - path: /news(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: news-ingestion
+                port:
+                  number: 4001
+
+    # NLP Processing Health Check (HTTP only)
+    - host: api.yourdomain.com
+      http:
+        paths:
+          - path: /nlp(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: nlp-processing
+                port:
+                  number: 8080
+
+  # TLS configuration (if using cert-manager)
+  tls:
+    - hosts:
+        - api.yourdomain.com
+      secretName: financial-news-tls
