@@ -8,5 +8,6 @@ resources:
   - infrastructure/flagger      # Then Flagger (installs CRDs)
   - infrastructure/secrets      # Then secrets
   - infrastructure/configs      # Then configs
+  - infrastructure/ingress
   - helmrelease.yaml           # Deploy application
   - canaries-kustomization.yaml # Canaries deployed after Flagger is ready

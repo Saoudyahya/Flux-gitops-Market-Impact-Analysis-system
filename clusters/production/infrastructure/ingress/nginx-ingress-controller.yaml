@@ -1,0 +1,65 @@
+# clusters/production/infrastructure/ingress/nginx-ingress.yaml
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: ingress-nginx
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: ingress-nginx
+  chart:
+    spec:
+      chart: ingress-nginx
+      version: 4.11.3
+      sourceRef:
+        kind: HelmRepository
+        name: ingress-nginx
+        namespace: flux-system
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    controller:
+      # LoadBalancer service
+      service:
+        type: LoadBalancer
+        annotations:
+          # AWS-specific annotations (if using AWS)
+          service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+          service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+          # Or for ALB:
+          # service.beta.kubernetes.io/aws-load-balancer-type: "external"
+          # service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: "ip"
+          # service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+
+      # Resources
+      resources:
+        requests:
+          cpu: 100m
+          memory: 90Mi
+        limits:
+          cpu: 200m
+          memory: 256Mi
+
+      # Metrics
+      metrics:
+        enabled: true
+        serviceMonitor:
+          enabled: true
+
+      # Autoscaling
+      autoscaling:
+        enabled: true
+        minReplicas: 2
+        maxReplicas: 5
+        targetCPUUtilizationPercentage: 80
+
+      # Ingress class
+      ingressClassResource:
+        name: nginx
+        enabled: true
+        default: true
