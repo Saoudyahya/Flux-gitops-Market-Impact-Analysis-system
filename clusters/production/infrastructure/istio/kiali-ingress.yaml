@@ -1,0 +1,21 @@
+# kiali-ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kiali-ingress
+  namespace: istio-system
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: localhost
+      http:
+        paths:
+          - path: /kiali
+            pathType: Prefix
+            backend:
+              service:
+                name: kiali-server
+                port:
+                  number: 20001
