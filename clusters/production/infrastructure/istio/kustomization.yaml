@@ -7,4 +7,5 @@ resources:
   - istio-base.yaml
   - istiod.yaml
   - kiali.yaml
+  - kiali-ingress.yaml
 #  - kiali-production.yaml # production overrides
