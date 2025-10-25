@@ -1,0 +1,281 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: market-impact-vs
+  namespace: financial-news
+spec:
+  hosts:
+    - "market-impact.example.com"
+    - "localhost"
+  gateways:
+    - financial-news-gateway
+  http:
+    - match:
+        - uri:
+            prefix: "/market-impact"
+      route:
+        - destination:
+            host: market-impact
+            port:
+              number: 8082
+          weight: 100
+      corsPolicy:
+        allowOrigins:
+          - exact: "*"  # Restrict in production
+        allowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+        allowHeaders:
+          - content-type
+          - authorization
+        maxAge: "24h"
+        allowCredentials: false
+
+---
+# Alert Signal Service VirtualService
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: alert-signal-vs
+  namespace: financial-news
+spec:
+  hosts:
+    - "api.market-impact.example.com"
+    - "localhost"
+  gateways:
+    - financial-news-gateway
+  http:
+    - match:
+        - uri:
+            prefix: "/api/alerts"
+      rewrite:
+        uri: "/api"
+      route:
+        - destination:
+            host: alert-signal
+            port:
+              number: 8081
+          weight: 100
+    - match:
+        - uri:
+            prefix: "/api/actuator"
+      route:
+        - destination:
+            host: alert-signal
+            port:
+              number: 8081
+          weight: 100
+
+---
+# News Ingestion Service VirtualService
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: news-ingestion-vs
+  namespace: financial-news
+spec:
+  hosts:
+    - "api.market-impact.example.com"
+    - "localhost"
+  gateways:
+    - financial-news-gateway
+  http:
+    - match:
+        - uri:
+            prefix: "/api/news"
+      rewrite:
+        uri: "/"
+      route:
+        - destination:
+            host: news-ingestion
+            port:
+              number: 4001
+          weight: 100
+      timeout: 30s
+      retries:
+        attempts: 3
+        perTryTimeout: 10s
+        retryOn: 5xx,reset,connect-failure,refused-stream
+
+---
+# NLP Processing Service VirtualService (Health/Metrics only for external access)
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: nlp-processing-vs
+  namespace: financial-news
+spec:
+  hosts:
+    - "api.market-impact.example.com"
+    - "localhost"
+  gateways:
+    - financial-news-gateway
+  http:
+    - match:
+        - uri:
+            prefix: "/api/nlp/health"
+      rewrite:
+        uri: "/health"
+      route:
+        - destination:
+            host: nlp-processing
+            port:
+              number: 8080
+          weight: 100
+
+---
+# Combined API VirtualService with path-based routing
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: api-gateway-vs
+  namespace: financial-news
+spec:
+  hosts:
+    - "api.market-impact.example.com"
+  gateways:
+    - financial-news-gateway
+  http:
+    # Global CORS configuration
+    - match:
+        - method:
+            exact: OPTIONS
+      corsPolicy:
+        allowOrigins:
+          - regex: ".*"
+        allowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+        allowHeaders:
+          - content-type
+          - authorization
+          - x-request-id
+        maxAge: "24h"
+        allowCredentials: true
+      route:
+        - destination:
+            host: market-impact
+            port:
+              number: 8082
+
+---
+# gRPC Gateway for internal communication (optional, for external gRPC access)
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: grpc-gateway
+  namespace: financial-news
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 50051
+        name: grpc
+        protocol: GRPC
+      hosts:
+        - "grpc.market-impact.example.com"
+
+---
+# gRPC VirtualService for NLP Processing
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: nlp-grpc-vs
+  namespace: financial-news
+spec:
+  hosts:
+    - "grpc.market-impact.example.com"
+  gateways:
+    - grpc-gateway
+  http:
+    - match:
+        - port: 50051
+      route:
+        - destination:
+            host: nlp-processing
+            port:
+              number: 50052
+
+---
+# Istio DestinationRule for traffic policies
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: market-impact-dr
+  namespace: financial-news
+spec:
+  host: market-impact
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 100
+      http:
+        http1MaxPendingRequests: 50
+        http2MaxRequests: 100
+        maxRequestsPerConnection: 2
+    loadBalancer:
+      simple: LEAST_REQUEST
+    outlierDetection:
+      consecutiveErrors: 5
+      interval: 30s
+      baseEjectionTime: 30s
+
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: alert-signal-dr
+  namespace: financial-news
+spec:
+  host: alert-signal
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 100
+      http:
+        http1MaxPendingRequests: 50
+        http2MaxRequests: 100
+    loadBalancer:
+      simple: ROUND_ROBIN
+
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: news-ingestion-dr
+  namespace: financial-news
+spec:
+  host: news-ingestion
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 50
+      http:
+        http1MaxPendingRequests: 25
+        http2MaxRequests: 50
+    loadBalancer:
+      simple: ROUND_ROBIN
+
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: nlp-processing-dr
+  namespace: financial-news
+spec:
+  host: nlp-processing
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 200
+      http:
+        http2MaxRequests: 200
+    loadBalancer:
+      simple: LEAST_REQUEST  # Best for varying processing times

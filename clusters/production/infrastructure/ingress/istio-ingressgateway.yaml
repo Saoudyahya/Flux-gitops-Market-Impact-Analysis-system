@@ -1,0 +1,59 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: istio-ingressgateway
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: istio-system
+  dependsOn:
+    - name: istiod
+      namespace: flux-system
+  chart:
+    spec:
+      chart: gateway
+      version: 1.24.1
+      sourceRef:
+        kind: HelmRepository
+        name: istio
+        namespace: flux-system
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    service:
+      type: LoadBalancer  # Change to NodePort for local development
+      ports:
+        - port: 80
+          targetPort: 8080
+          name: http2
+          protocol: TCP
+        - port: 443
+          targetPort: 8443
+          name: https
+          protocol: TCP
+        - port: 50051
+          targetPort: 50051
+          name: grpc
+          protocol: TCP
+      # For AWS/EKS, uncomment these annotations
+      # annotations:
+      #   service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+      #   service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+
+    autoscaling:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 5
+      targetCPUUtilizationPercentage: 80
+
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 2000m
+        memory: 1024Mi
