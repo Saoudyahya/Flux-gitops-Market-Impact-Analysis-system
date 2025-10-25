@@ -24,19 +24,12 @@ spec:
   upgrade:
     remediation:
       retries: 3
-  # ✅ MINIMAL CONFIG: Let Istio use smart defaults
-  # The gateway chart in 1.24.x has a complex schema with _internal_defaults_do_not_set
-  # Best practice is to keep it simple and only override what's necessary
-  values:
-    # Override labels to match your existing VirtualServices
-    labels:
-      istio: ingressgateway
-      app: istio-ingressgateway
-
-    # Service type - use LoadBalancer to get external IP
-    service:
-      type: LoadBalancer  # Change to NodePort for Minikube/local clusters
-      # Ports will use sensible defaults (80, 443, 15021)
-      # Uncomment for AWS EKS:
-      # annotations:
-      #   service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+  # ✅ SOLUTION: Use NO custom values for Istio Gateway 1.24.x
+  # The chart will create a gateway with sensible defaults:
+  # - Deployment named: istio-ingressgateway
+  # - Service type: LoadBalancer
+  # - Ports: 15021 (status), 80 (http), 443 (https)
+  # - Labels: istio=ingressgateway
+  #
+  # If you need customization, do it via Kubernetes patches AFTER deployment
+  # or downgrade to Istio 1.23.x which has a more flexible schema
