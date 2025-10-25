@@ -1,10 +1,21 @@
-# clusters/production/infrastructure/ingress/kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+
 resources:
+  # Istio Ingress Gateway (LoadBalancer/NodePort)
   - istio-ingressgateway.yaml
+  
+  # Gateway Configuration
   - istio-gateway.yaml
+  
+  # Routing Rules (consolidated)
   - virtual-services.yaml
-  # Uncomment if using standard Ingress instead of Istio
-  # - kubernetes-ingress.yaml
-  # - nginx-ingress-controller.yaml  # If NGINX Ingress Controller needed
+  
+  # Destination Rules for traffic policies
+  - destination-rules.yaml
+
+# Optional: Create TLS certificate
+# - tls-certificate.yaml
+
+# Note: kubernetes-ingress.yaml is intentionally excluded
+# as we're using Istio Gateway as primary ingress

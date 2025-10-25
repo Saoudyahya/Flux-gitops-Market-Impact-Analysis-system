@@ -5,24 +5,34 @@ metadata:
   namespace: financial-news
 spec:
   selector:
-    istio: ingressgateway  # Use Istio default ingress gateway
+    istio: ingressgateway
   servers:
+    # HTTP - Redirect to HTTPS in production
     - port:
         number: 80
         name: http
         protocol: HTTP
       hosts:
-        - "market-impact.example.com"  # Change to your domain
-        - "api.market-impact.example.com"
-        - "localhost"  # For local development
-    # Optional: HTTPS configuration
+        - "*"  # For development
+      # Uncomment for production:
+      # tls:
+      #   httpsRedirect: true
+
+    # HTTPS Configuration (for production)
+    # - port:
+    #     number: 443
+    #     name: https
+    #     protocol: HTTPS
+    #   tls:
+    #     mode: SIMPLE
+    #     credentialName: financial-news-tls-cert
+    #   hosts:
+    #     - "your-actual-domain.com"
+
+    # gRPC Gateway
     - port:
-        number: 443
-        name: https
-        protocol: HTTPS
-      tls:
-        mode: SIMPLE
-        credentialName: financial-news-tls  # Create this secret with your TLS cert
+        number: 50051
+        name: grpc
+        protocol: GRPC
       hosts:
-        - "market-impact.example.com"
-        - "api.market-impact.example.com"
+        - "*"
