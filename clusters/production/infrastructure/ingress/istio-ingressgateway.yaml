@@ -24,64 +24,19 @@ spec:
   upgrade:
     remediation:
       retries: 3
+  # ✅ MINIMAL CONFIG: Let Istio use smart defaults
+  # The gateway chart in 1.24.x has a complex schema with _internal_defaults_do_not_set
+  # Best practice is to keep it simple and only override what's necessary
   values:
-    # ✅ CORRECTED: Istio Gateway 1.24.x uses different schema
-    # The chart now expects configuration at the root level
-
-    # Basic metadata
-    name: istio-ingressgateway
-
-    # Labels for pod selector
+    # Override labels to match your existing VirtualServices
     labels:
       istio: ingressgateway
       app: istio-ingressgateway
 
-    # Service configuration
+    # Service type - use LoadBalancer to get external IP
     service:
-      type: LoadBalancer  # Change to NodePort for local k8s
-      ports:
-        - name: status-port
-          port: 15021
-          protocol: TCP
-          targetPort: 15021
-        - name: http2
-          port: 80
-          protocol: TCP
-          targetPort: 8080
-        - name: https
-          port: 443
-          protocol: TCP
-          targetPort: 8443
-        - name: grpc
-          port: 50051
-          protocol: TCP
-          targetPort: 50051
-
-      # Uncomment for AWS EKS
+      type: LoadBalancer  # Change to NodePort for Minikube/local clusters
+      # Ports will use sensible defaults (80, 443, 15021)
+      # Uncomment for AWS EKS:
       # annotations:
       #   service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
-      #   service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
-
-    # Deployment configuration
-    replicaCount: 2
-
-    # Resource limits
-    resources:
-      requests:
-        cpu: 100m
-        memory: 128Mi
-      limits:
-        cpu: 2000m
-        memory: 1024Mi
-
-    # Autoscaling
-    autoscaling:
-      enabled: true
-      minReplicas: 2
-      maxReplicas: 5
-      targetCPUUtilizationPercentage: 80
-
-    # Service account
-    serviceAccount:
-      create: true
-      name: istio-ingressgateway
