@@ -1,0 +1,23 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: ingress-resources
+  namespace: flux-system
+spec:
+  interval: 10m0s
+  path: ./clusters/production/infrastructure/ingress
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  # ⚠️ CRITICAL: Wait for Istio to be fully ready
+  dependsOn:
+    - name: flux-system  # Wait for base infrastructure
+  # Health checks - wait for Istio CRDs to be installed
+  healthChecks:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: istiod
+      namespace: istio-system
+  timeout: 5m0s
+  retryInterval: 2m0s
