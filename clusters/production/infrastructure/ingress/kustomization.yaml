@@ -1,6 +1,10 @@
+# clusters/production/infrastructure/ingress/kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - helmrepository.yaml
-  - nginx-ingress-controller.yaml
-  - ingress.yaml
+  - istio-ingressgateway.yaml
+  - istio-gateway.yaml
+  - virtual-services.yaml
+  # Uncomment if using standard Ingress instead of Istio
+  # - kubernetes-ingress.yaml
+  # - nginx-ingress-controller.yaml  # If NGINX Ingress Controller needed

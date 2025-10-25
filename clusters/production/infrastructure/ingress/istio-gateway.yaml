@@ -1,0 +1,28 @@
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: financial-news-gateway
+  namespace: financial-news
+spec:
+  selector:
+    istio: ingressgateway  # Use Istio default ingress gateway
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "market-impact.example.com"  # Change to your domain
+        - "api.market-impact.example.com"
+        - "localhost"  # For local development
+    # Optional: HTTPS configuration
+    - port:
+        number: 443
+        name: https
+        protocol: HTTPS
+      tls:
+        mode: SIMPLE
+        credentialName: financial-news-tls  # Create this secret with your TLS cert
+      hosts:
+        - "market-impact.example.com"
+        - "api.market-impact.example.com"
