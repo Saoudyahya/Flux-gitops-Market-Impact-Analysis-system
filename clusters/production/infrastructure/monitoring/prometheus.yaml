@@ -9,7 +9,7 @@ spec:
   chart:
     spec:
       chart: kube-prometheus-stack
-      version: 65.0.0  # Latest stable version
+      version: 65.0.0
       sourceRef:
         kind: HelmRepository
         name: prometheus-community
@@ -24,13 +24,19 @@ spec:
     remediation:
       retries: 3
   values:
-    # Prometheus Configuration
+    # ============================================
+    # PROMETHEUS CONFIGURATION - FIXED
+    # ============================================
     prometheus:
       enabled: true
       prometheusSpec:
         replicas: 1
         retention: 15d
         retentionSize: "18GB"
+
+        # ✅ CRITICAL FIX: Configure external URL for subpath routing
+        externalUrl: "http://localhost/prometheus"
+        routePrefix: /prometheus
 
         resources:
           requests:
@@ -48,11 +54,11 @@ spec:
                 requests:
                   storage: 20Gi
 
-        # Service Monitor Selector - will auto-discover ServiceMonitors
+        # Service Monitor Selector
         serviceMonitorSelectorNilUsesHelmValues: false
         serviceMonitorSelector: {}
 
-        # Add Istio scrape configs
+        # Istio scrape configs
         additionalScrapeConfigs:
           - job_name: 'istiod'
             kubernetes_sd_configs:
@@ -87,10 +93,27 @@ spec:
                 action: replace
                 target_label: pod_name
 
-    # Grafana Configuration (included in stack)
+    # ============================================
+    # GRAFANA CONFIGURATION - FIXED
+    # ============================================
     grafana:
       enabled: true
-      adminPassword: "admin"  # CHANGE THIS IN PRODUCTION!
+      adminPassword: "admin"  # ⚠️ CHANGE THIS IN PRODUCTION!
+
+      # ✅ CRITICAL FIX: Configure Grafana for subpath routing
+      grafana.ini:
+        server:
+          root_url: "http://localhost/grafana"
+          serve_from_sub_path: true
+          domain: localhost
+
+        # Security settings
+        security:
+          allow_embedding: false
+
+        # Anonymous access (optional - disable in production)
+        auth.anonymous:
+          enabled: false
 
       service:
         type: ClusterIP
@@ -118,11 +141,18 @@ spec:
               options:
                 path: /var/lib/grafana/dashboards/istio
 
-    # AlertManager (optional)
+    # ============================================
+    # ALERTMANAGER CONFIGURATION
+    # ============================================
     alertmanager:
       enabled: true
       alertmanagerSpec:
         replicas: 1
+
+        # ✅ OPTIONAL: Configure AlertManager external URL
+        externalUrl: "http://localhost/alertmanager"
+        routePrefix: /alertmanager
+
         resources:
           requests:
             cpu: 10m
@@ -131,19 +161,24 @@ spec:
             cpu: 50m
             memory: 64Mi
 
-    # Node Exporter
+    # ============================================
+    # NODE EXPORTER & KUBE STATE METRICS
+    # ============================================
     nodeExporter:
       enabled: true
 
-    # Kube State Metrics
     kubeStateMetrics:
       enabled: true
 
-    # Default Service Monitors
+    # ============================================
+    # DEFAULT RULES
+    # ============================================
     defaultRules:
       create: true
 
-    # Prometheus Operator
+    # ============================================
+    # PROMETHEUS OPERATOR
+    # ============================================
     prometheusOperator:
       enabled: true
       resources:

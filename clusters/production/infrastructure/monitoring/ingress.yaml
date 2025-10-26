@@ -1,6 +1,5 @@
-# clusters/production/infrastructure/monitoring/ingress.yaml
 ---
-# Grafana Ingress
+# Grafana Ingress - FIXED
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -9,21 +8,26 @@ metadata:
   annotations:
     # Basic settings
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
-    nginx.ingress.kubernetes.io/rewrite-target: /
-    
+
+    # ✅ REMOVED: rewrite-target (this was breaking Grafana)
+    # Grafana needs to receive the full path including /grafana
+
     # CORS settings
     nginx.ingress.kubernetes.io/enable-cors: "true"
     nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
     nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"
     nginx.ingress.kubernetes.io/cors-allow-origin: "*"
-    
+
     # Timeouts
     nginx.ingress.kubernetes.io/proxy-connect-timeout: "600"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
-    
+
     # Backend protocol
     nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+
+    # ✅ NEW: Preserve the path
+    nginx.ingress.kubernetes.io/use-regex: "true"
 
 spec:
   ingressClassName: nginx
@@ -41,7 +45,7 @@ spec:
                   number: 80
 
 ---
-# Prometheus Ingress
+# Prometheus Ingress - FIXED
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -50,21 +54,25 @@ metadata:
   annotations:
     # Basic settings
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
-    nginx.ingress.kubernetes.io/rewrite-target: /
-    
+
+    # ✅ REMOVED: rewrite-target (Prometheus needs full path)
+
     # CORS settings
     nginx.ingress.kubernetes.io/enable-cors: "true"
     nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
     nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"
     nginx.ingress.kubernetes.io/cors-allow-origin: "*"
-    
+
     # Timeouts
     nginx.ingress.kubernetes.io/proxy-connect-timeout: "600"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
-    
+
     # Backend protocol
     nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+
+    # ✅ NEW: Preserve the path
+    nginx.ingress.kubernetes.io/use-regex: "true"
 
 spec:
   ingressClassName: nginx
