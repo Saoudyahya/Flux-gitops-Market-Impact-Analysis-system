@@ -1,0 +1,90 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: ingress-nginx
+  namespace: flux-system
+spec:
+  interval: 30m
+  targetNamespace: ingress-nginx
+  chart:
+    spec:
+      chart: ingress-nginx
+      version: 4.8.3  # Check for latest version
+      sourceRef:
+        kind: HelmRepository
+        name: ingress-nginx
+        namespace: flux-system
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    controller:
+      # Enable metrics for Prometheus
+      metrics:
+        enabled: true
+        serviceMonitor:
+          enabled: true
+          namespace: monitoring
+
+      # Pod annotations for Prometheus scraping
+      podAnnotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "10254"
+
+      # Service configuration
+      service:
+        type: LoadBalancer  # Change to NodePort for local/on-prem
+        # For cloud providers, this will create a LoadBalancer
+        # For local, use NodePort and access via node IP
+
+      # Resource limits
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi
+
+      # Autoscaling
+      autoscaling:
+        enabled: true
+        minReplicas: 2
+        maxReplicas: 5
+        targetCPUUtilizationPercentage: 70
+
+      # Additional configuration
+      config:
+        # CORS settings
+        enable-cors: "true"
+        cors-allow-origin: "*"
+        cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
+
+        # Proxy settings
+        proxy-body-size: "50m"
+        proxy-connect-timeout: "600"
+        proxy-read-timeout: "600"
+        proxy-send-timeout: "600"
+
+        # Performance
+        use-gzip: "true"
+        enable-brotli: "true"
+
+        # Security headers
+        hide-headers: "Server,X-Powered-By"
+        ssl-protocols: "TLSv1.2 TLSv1.3"
+
+      # Admission webhooks
+      admissionWebhooks:
+        enabled: true
+
+      # Ingress class
+      ingressClassResource:
+        name: nginx
+        enabled: true
+        default: true
+        controllerValue: "k8s.io/ingress-nginx"
