@@ -12,7 +12,7 @@ spec:
   chart:
     spec:
       chart: gateway
-      version: 1.24.1
+      version: 1.23.3  # ✅ Use 1.23.x instead of 1.24.1
       sourceRef:
         kind: HelmRepository
         name: istio
@@ -24,12 +24,4 @@ spec:
   upgrade:
     remediation:
       retries: 3
-  # ✅ SOLUTION: Use NO custom values for Istio Gateway 1.24.x
-  # The chart will create a gateway with sensible defaults:
-  # - Deployment named: istio-ingressgateway
-  # - Service type: LoadBalancer
-  # - Ports: 15021 (status), 80 (http), 443 (https)
-  # - Labels: istio=ingressgateway
-  #
-  # If you need customization, do it via Kubernetes patches AFTER deployment
-  # or downgrade to Istio 1.23.x which has a more flexible schema
+  values: {}  # Keep empty
