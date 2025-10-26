@@ -11,3 +11,4 @@ resources:
    - infrastructure/configs
    - helmrelease.yaml
    - canaries-kustomization.yaml
+   - infrastructure/ingress
