@@ -25,7 +25,7 @@ spec:
       retries: 3
   values:
     # ============================================
-    # PROMETHEUS CONFIGURATION - FIXED
+    # PROMETHEUS CONFIGURATION
     # ============================================
     prometheus:
       enabled: true
@@ -34,8 +34,8 @@ spec:
         retention: 15d
         retentionSize: "18GB"
 
-        # ✅ CRITICAL FIX: Configure external URL for subpath routing
-        externalUrl: "http://localhost/prometheus"
+        # ✅ UPDATED: Use relative path for subpath routing (no host)
+        # AWS ELB will provide the external domain
         routePrefix: /prometheus
 
         resources:
@@ -94,18 +94,18 @@ spec:
                 target_label: pod_name
 
     # ============================================
-    # GRAFANA CONFIGURATION - FIXED
+    # GRAFANA CONFIGURATION
     # ============================================
     grafana:
       enabled: true
       adminPassword: "admin"  # ⚠️ CHANGE THIS IN PRODUCTION!
 
-      # ✅ CRITICAL FIX: Configure Grafana for subpath routing
+      # ✅ UPDATED: Configure Grafana for subpath routing (no fixed domain)
+      # AWS ELB will provide the external domain dynamically
       grafana.ini:
         server:
-          root_url: "http://localhost/grafana"
+          root_url: "%(protocol)s://%(domain)s:%(http_port)s/grafana"
           serve_from_sub_path: true
-          domain: localhost
 
         # Security settings
         security:
@@ -149,8 +149,7 @@ spec:
       alertmanagerSpec:
         replicas: 1
 
-        # ✅ OPTIONAL: Configure AlertManager external URL
-        externalUrl: "http://localhost/alertmanager"
+        # ✅ UPDATED: Use relative path for subpath routing (no host)
         routePrefix: /alertmanager
 
         resources:
