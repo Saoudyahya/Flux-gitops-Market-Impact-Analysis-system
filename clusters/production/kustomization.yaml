@@ -1,14 +1,13 @@
-# clusters/production/kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-   - namespace.yaml
-   - infrastructure/istio
-   - infrastructure/monitoring
-   - infrastructure/flagger
-   - infrastructure/nginx-ingress  # ADD THIS LINE
-   - infrastructure/secrets
-   - infrastructure/configs
-   - helmrelease.yaml
-   - canaries-kustomization.yaml
-   - infrastructure/ingress
+  - namespace.yaml
+  - infrastructure/istio
+  - infrastructure/monitoring
+  - infrastructure/flagger
+  - infrastructure/nginx-ingress
+  - infrastructure/secrets
+  - infrastructure/configs
+  - helmrelease.yaml
+  - ingress-kustomization.yaml  # ← Reference the Flux Kustomization file directly
+  - canaries-kustomization.yaml
