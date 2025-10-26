@@ -2,20 +2,16 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-  # Istio Ingress Gateway (LoadBalancer/NodePort)
-  - istio-ingressgateway.yaml
-  
-  # Gateway Configuration
-  - istio-gateway.yaml
-  
-  # Routing Rules (consolidated)
-  - virtual-services.yaml
-  
-  # Destination Rules for traffic policies
+  # Standard Kubernetes Ingress
+  - kubernetes-ingress.yaml
+
+  # Optional: Destination Rules for Istio service mesh (keep for mTLS)
+  # These work with Istio sidecar proxies but don't require Gateway
   - destination-rules.yaml
 
-# Optional: Create TLS certificate
-# - tls-certificate.yaml
-
-# Note: kubernetes-ingress.yaml is intentionally excluded
-# as we're using Istio Gateway as primary ingress
+# Note: Removed Istio Gateway and VirtualService resources
+# The Istio service mesh will still provide:
+# - mTLS between services
+# - Observability and tracing
+# - Circuit breakers via DestinationRules
+# But ingress traffic will be handled by NGINX Ingress Controller

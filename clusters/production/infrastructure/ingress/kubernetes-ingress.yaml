@@ -4,36 +4,32 @@ metadata:
   name: financial-news-ingress
   namespace: financial-news
   annotations:
+    # Basic configuration
     kubernetes.io/ingress.class: nginx
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
-    nginx.ingress.kubernetes.io/use-regex: "true"
+
+    # CORS Configuration
     nginx.ingress.kubernetes.io/enable-cors: "true"
     nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
     nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+
+    # Timeout Configuration
     nginx.ingress.kubernetes.io/proxy-body-size: "50m"
     nginx.ingress.kubernetes.io/proxy-connect-timeout: "600"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+
+    # Health checks
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
 spec:
   ingressClassName: nginx
-  tls:
-    - hosts:
-        - market-impact.example.com
-        - api.market-impact.example.com
-      secretName: financial-news-tls
   rules:
-    # Main application
-    - host: market-impact.example.com
+    # Main Market Impact UI
+    - host: market-impact.local  # Change to your actual domain
       http:
         paths:
-          - path: /market-impact(/|$)(.*)
-            pathType: Prefix
-            backend:
-              service:
-                name: market-impact
-                port:
-                  number: 8082
+          # Root path - Market Impact UI
           - path: /
             pathType: Prefix
             backend:
@@ -42,12 +38,21 @@ spec:
                 port:
                   number: 8082
 
+          # Market Impact specific path
+          - path: /market-impact
+            pathType: Prefix
+            backend:
+              service:
+                name: market-impact
+                port:
+                  number: 8082
+
     # API endpoints
-    - host: api.market-impact.example.com
+    - host: api.market-impact.local  # Change to your actual domain
       http:
         paths:
           # Alert Signal API
-          - path: /alerts(/|$)(.*)
+          - path: /api/alerts
             pathType: Prefix
             backend:
               service:
@@ -56,7 +61,7 @@ spec:
                   number: 8081
 
           # News Ingestion API
-          - path: /news(/|$)(.*)
+          - path: /api/news
             pathType: Prefix
             backend:
               service:
@@ -65,7 +70,7 @@ spec:
                   number: 4001
 
           # Market Impact API
-          - path: /market(/|$)(.*)
+          - path: /api/market
             pathType: Prefix
             backend:
               service:
@@ -73,8 +78,8 @@ spec:
                 port:
                   number: 8082
 
-          # NLP Processing Health
-          - path: /nlp/health
+          # NLP Health Check
+          - path: /api/nlp/health
             pathType: Exact
             backend:
               service:
@@ -82,7 +87,16 @@ spec:
                 port:
                   number: 8080
 
-    # Local development
+          # Actuator endpoints
+          - path: /actuator
+            pathType: Prefix
+            backend:
+              service:
+                name: market-impact
+                port:
+                  number: 8082
+
+    # Local development (localhost)
     - host: localhost
       http:
         paths:
@@ -93,3 +107,26 @@ spec:
                 name: market-impact
                 port:
                   number: 8082
+
+          - path: /api/alerts
+            pathType: Prefix
+            backend:
+              service:
+                name: alert-signal
+                port:
+                  number: 8081
+
+          - path: /api/news
+            pathType: Prefix
+            backend:
+              service:
+                name: news-ingestion
+                port:
+                  number: 4001
+
+  # TLS Configuration (optional - for production)
+  # tls:
+  #   - hosts:
+  #       - market-impact.yourdomain.com
+  #       - api.market-impact.yourdomain.com
+  #     secretName: financial-news-tls
