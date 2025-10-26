@@ -18,9 +18,9 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - host: market-impact.local
-      http:
+    - http:
         paths:
+          # Market Impact UI (root path)
           - path: /
             pathType: Prefix
             backend:
@@ -29,10 +29,7 @@ spec:
                 port:
                   number: 8082
 
-    - host: api.market-impact.local
-      http:
-        paths:
-          # Each service handles its own path prefix
+          # Alert Signal API
           - path: /api
             pathType: Prefix
             backend:
@@ -41,24 +38,14 @@ spec:
                 port:
                   number: 8081
 
-          - path: /
+          # News Ingestion API
+          - path: /news
             pathType: Prefix
             backend:
               service:
                 name: news-ingestion
                 port:
                   number: 4001
-
-    - host: localhost
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: market-impact
-                port:
-                  number: 8082
 
 ---
 # ============================================
