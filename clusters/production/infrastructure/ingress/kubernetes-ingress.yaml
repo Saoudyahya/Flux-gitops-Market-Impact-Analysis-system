@@ -4,8 +4,10 @@ metadata:
   name: financial-news-ingress
   namespace: financial-news
   annotations:
-    # Basic configuration
-    kubernetes.io/ingress.class: nginx
+    # ❌ REMOVE THIS - it's deprecated and you have ingressClassName below
+    # kubernetes.io/ingress.class: nginx
+
+    # SSL Configuration
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
 
     # CORS Configuration
@@ -20,16 +22,19 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
 
-    # Health checks
+    # Backend Protocol
     nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+
 spec:
   ingressClassName: nginx
   rules:
-    # Main Market Impact UI
-    - host: market-impact.local  # Change to your actual domain
+    # ============================================
+    # Main UI - Market Impact Service
+    # ============================================
+    - host: market-impact.local
       http:
         paths:
-          # Root path - Market Impact UI
+          # Market Impact UI and API (has context path /market-impact)
           - path: /
             pathType: Prefix
             backend:
@@ -38,21 +43,13 @@ spec:
                 port:
                   number: 8082
 
-          # Market Impact specific path
-          - path: /market-impact
-            pathType: Prefix
-            backend:
-              service:
-                name: market-impact
-                port:
-                  number: 8082
-
-    # API endpoints
-    - host: api.market-impact.local  # Change to your actual domain
+    # ============================================
+    # API Endpoints - Separate Host
+    # ============================================
+    - host: api.market-impact.local
       http:
         paths:
-          # Alert Signal API
-          - path: /api/alerts
+          - path: /alerts
             pathType: Prefix
             backend:
               service:
@@ -60,8 +57,7 @@ spec:
                 port:
                   number: 8081
 
-          # News Ingestion API
-          - path: /api/news
+          - path: /news
             pathType: Prefix
             backend:
               service:
@@ -69,8 +65,8 @@ spec:
                 port:
                   number: 4001
 
-          # Market Impact API
-          - path: /api/market
+          # ✅ Market Impact API - Keep /market prefix
+          - path: /market
             pathType: Prefix
             backend:
               service:
@@ -78,25 +74,17 @@ spec:
                 port:
                   number: 8082
 
-          # NLP Health Check
-          - path: /api/nlp/health
-            pathType: Exact
+          - path: /nlp
+            pathType: Prefix
             backend:
               service:
                 name: nlp-processing
                 port:
                   number: 8080
 
-          # Actuator endpoints
-          - path: /actuator
-            pathType: Prefix
-            backend:
-              service:
-                name: market-impact
-                port:
-                  number: 8082
-
-    # Local development (localhost)
+    # ============================================
+    # Local Development (optional)
+    # ============================================
     - host: localhost
       http:
         paths:
@@ -107,26 +95,3 @@ spec:
                 name: market-impact
                 port:
                   number: 8082
-
-          - path: /api/alerts
-            pathType: Prefix
-            backend:
-              service:
-                name: alert-signal
-                port:
-                  number: 8081
-
-          - path: /api/news
-            pathType: Prefix
-            backend:
-              service:
-                name: news-ingestion
-                port:
-                  number: 4001
-
-  # TLS Configuration (optional - for production)
-  # tls:
-  #   - hosts:
-  #       - market-impact.yourdomain.com
-  #       - api.market-impact.yourdomain.com
-  #     secretName: financial-news-tls
