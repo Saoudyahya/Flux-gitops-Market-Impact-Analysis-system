@@ -1,6 +1,6 @@
 # clusters/production/infrastructure/monitoring/ingress.yaml
 ---
-# Grafana Ingress
+# Grafana Ingress - FIXED: Correct service name and rewrite configuration
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -9,19 +9,22 @@ metadata:
   annotations:
     # Basic settings
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
-    nginx.ingress.kubernetes.io/rewrite-target: /
-    
+
+    # IMPORTANT: Grafana needs special rewrite configuration
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/use-regex: "true"
+
     # CORS settings
     nginx.ingress.kubernetes.io/enable-cors: "true"
     nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
     nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"
     nginx.ingress.kubernetes.io/cors-allow-origin: "*"
-    
+
     # Timeouts
     nginx.ingress.kubernetes.io/proxy-connect-timeout: "600"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
-    
+
     # Backend protocol
     nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
 
@@ -32,16 +35,16 @@ spec:
     - host: localhost
       http:
         paths:
-          - path: /grafana
-            pathType: Prefix
+          - path: /grafana(/|$)(.*)
+            pathType: ImplementationSpecific
             backend:
               service:
-                name: monitoring-grafana
+                name: monitoring-kube-prometheus-stack-grafana
                 port:
                   number: 80
 
 ---
-# Prometheus Ingress
+# Prometheus Ingress - FIXED: Proper rewrite for /prometheus path
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -50,19 +53,26 @@ metadata:
   annotations:
     # Basic settings
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
-    nginx.ingress.kubernetes.io/rewrite-target: /
-    
+
+    # IMPORTANT: Prometheus needs special rewrite configuration
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/use-regex: "true"
+
+    # Add external URL configuration for Prometheus
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      proxy_set_header X-Forwarded-Prefix /prometheus;
+
     # CORS settings
     nginx.ingress.kubernetes.io/enable-cors: "true"
     nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
     nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"
     nginx.ingress.kubernetes.io/cors-allow-origin: "*"
-    
+
     # Timeouts
     nginx.ingress.kubernetes.io/proxy-connect-timeout: "600"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
-    
+
     # Backend protocol
     nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
 
@@ -73,8 +83,8 @@ spec:
     - host: localhost
       http:
         paths:
-          - path: /prometheus
-            pathType: Prefix
+          - path: /prometheus(/|$)(.*)
+            pathType: ImplementationSpecific
             backend:
               service:
                 name: monitoring-kube-prometheus-prometheus
