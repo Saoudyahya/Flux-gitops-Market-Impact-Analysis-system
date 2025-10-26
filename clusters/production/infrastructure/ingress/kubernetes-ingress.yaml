@@ -59,3 +59,25 @@ spec:
                 name: market-impact
                 port:
                   number: 8082
+
+---
+# ============================================
+# IMPORTANT: For gRPC services, use Istio VirtualService
+# NGINX Ingress does NOT support gRPC well
+# ============================================
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: nlp-processing-grpc
+  namespace: financial-news
+spec:
+  hosts:
+    - nlp-processing.financial-news.svc.cluster.local
+  http:
+    - match:
+        - port: 50052
+      route:
+        - destination:
+            host: nlp-processing
+            port:
+              number: 50052
