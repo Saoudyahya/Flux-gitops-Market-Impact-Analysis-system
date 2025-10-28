@@ -36,10 +36,12 @@ spec:
           cpu: 500m
           memory: 512Mi
 
-    # ✅ FIXED: Correct Prometheus service name from your cluster
+    # ✅ FIXED: Add /prometheus route prefix since Prometheus is configured with routePrefix
     external_services:
       prometheus:
-        url: "http://monitoring-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090"
+        url: "http://monitoring-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090/prometheus"
+        # Note: Added /prometheus at the end because your prometheus.yaml has:
+        # routePrefix: /prometheus
 
       grafana:
         enabled: true
