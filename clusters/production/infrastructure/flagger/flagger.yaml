@@ -29,7 +29,7 @@ spec:
       retries: 3
     crds: CreateReplace  # ✅ ADD THIS
   values:
-    metricsServer: "http://monitoring-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090"
+    metricsServer: "http://kube-prometheus-stack-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090"
     meshProvider: istio  # ✅ Already correct
     logLevel: info
     resources:

@@ -1,4 +1,4 @@
-# clusters/production/infrastructure/flagger/metric-templates.yaml
+# clusters/production/canaries/metric-templates.yaml
 ---
 apiVersion: flagger.app/v1beta1
 kind: MetricTemplate
@@ -8,7 +8,8 @@ metadata:
 spec:
   provider:
     type: prometheus
-    address: http://monitoring-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
+    # ✅ FIXED: Correct Prometheus service name
+    address: http://kube-prometheus-stack-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
   query: |
     100 - sum(
       rate(
@@ -40,7 +41,7 @@ metadata:
 spec:
   provider:
     type: prometheus
-    address: http://monitoring-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
+    address: http://kube-prometheus-stack-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
   query: |
     histogram_quantile(
       0.99,
@@ -64,7 +65,7 @@ metadata:
 spec:
   provider:
     type: prometheus
-    address: http://monitoring-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
+    address: http://kube-prometheus-stack-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
   query: |
     sum(
       rate(
@@ -92,7 +93,7 @@ metadata:
 spec:
   provider:
     type: prometheus
-    address: http://monitoring-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
+    address: http://kube-prometheus-stack-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
   query: |
     sum(
       container_memory_working_set_bytes{
@@ -118,7 +119,7 @@ metadata:
 spec:
   provider:
     type: prometheus
-    address: http://monitoring-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
+    address: http://kube-prometheus-stack-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
   query: |
     100 - sum(
       rate(
