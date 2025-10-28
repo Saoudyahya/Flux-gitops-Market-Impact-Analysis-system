@@ -36,20 +36,15 @@ spec:
           cpu: 500m
           memory: 512Mi
 
-    # ✅ FIXED: Correct Prometheus service name
+    # ✅ FIXED: Correct Prometheus service name from your cluster
     external_services:
       prometheus:
-        # Option 1: Use the full service name from kube-prometheus-stack
-        url: "http://kube-prometheus-stack-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090"
-
-        # If Prometheus has routePrefix set, you may need to add it to the URL
-        # url: "http://kube-prometheus-stack-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090/prometheus"
+        url: "http://monitoring-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090"
 
       grafana:
         enabled: true
-        # ✅ FIXED: Correct Grafana service name
-        in_cluster_url: "http://kube-prometheus-stack-grafana.monitoring.svc.cluster.local:80"
-        url: "http://kube-prometheus-stack-grafana.monitoring.svc.cluster.local:80"
+        in_cluster_url: "http://monitoring-kube-prometheus-stack-grafana.monitoring.svc.cluster.local:80"
+        url: "http://monitoring-kube-prometheus-stack-grafana.monitoring.svc.cluster.local:80"
 
     auth:
       strategy: "anonymous"
