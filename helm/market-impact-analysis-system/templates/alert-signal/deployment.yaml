@@ -18,14 +18,38 @@ spec:
       labels:
         app: {{ .Values.alertSignal.name }}
         component: alerts
+        version: {{ .Values.alertSignal.image.tag | quote }}
         {{- with .Values.commonLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8081"
+        prometheus.io/path: "/api/actuator/prometheus"
     spec:
+      # Security Context
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+
+      # Service Account (if needed)
+      serviceAccountName: default
+
       containers:
         - name: {{ .Values.alertSignal.name }}
           image: {{ include "market-impact.image" (dict "registry" .Values.global.imageRegistry "repository" .Values.alertSignal.image.repository "tag" .Values.alertSignal.image.tag) }}
           imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+
+          # Container Security Context
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop:
+                - ALL
+
+          # Ports
           ports:
             - containerPort: {{ .Values.alertSignal.service.httpPort }}
               name: http
@@ -33,119 +57,293 @@ spec:
             - containerPort: {{ .Values.alertSignal.service.grpcPort }}
               name: grpc
               protocol: TCP
-          env:
-            # Server Configuration
-            - name: SERVER_PORT
-              value: {{ .Values.alertSignal.env.serverPort | quote }}
-            - name: GRPC_SERVER_PORT
-              value: {{ .Values.alertSignal.env.grpcServerPort | quote }}
 
-            # Database Configuration
+          # Environment Variables
+          env:
+            # ==========================================
+            # SERVER CONFIGURATION
+            # ==========================================
+            - name: SERVER_PORT
+              value: {{ .Values.alertSignal.service.httpPort | quote }}
+
+            - name: SERVER_SERVLET_CONTEXT_PATH
+              value: "/api"
+
+            - name: GRPC_SERVER_PORT
+              value: {{ .Values.alertSignal.service.grpcPort | quote }}
+
+            - name: SPRING_APPLICATION_NAME
+              value: "alert-signal-service"
+
+            # ==========================================
+            # DATABASE CONFIGURATION (Spring Boot)
+            # ==========================================
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://$(DB_HOST):$(DB_PORT)/$(DB_DATABASE)?sslmode=require"
+
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.secretName }}
+                  key: username
+
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.secretName }}
+                  key: password
+
             - name: DB_HOST
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.database.secretName }}
                   key: host
+
             - name: DB_PORT
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.database.secretName }}
                   key: port
-            - name: DB_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.database.secretName }}
-                  key: username
-            - name: DB_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.database.secretName }}
-                  key: password
+
             - name: DB_DATABASE
               valueFrom:
                 configMapKeyRef:
                   name: db-config
                   key: ALERTSIGNAL_DB
-            - name: DB_SCHEMA
-              valueFrom:
-                configMapKeyRef:
-                  name: db-config
-                  key: DB_SCHEMA
-            - name: DB_POOL_MIN_SIZE
+
+            # Database Pool Configuration
+            - name: SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE
               valueFrom:
                 configMapKeyRef:
                   name: db-config
                   key: DB_POOL_MIN_SIZE
-            - name: DB_POOL_MAX_SIZE
+
+            - name: SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE
               valueFrom:
                 configMapKeyRef:
                   name: db-config
                   key: DB_POOL_MAX_SIZE
-            - name: DB_CONNECTION_TIMEOUT
+
+            - name: SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT
               valueFrom:
                 configMapKeyRef:
                   name: db-config
                   key: DB_CONNECTION_TIMEOUT
-            - name: DB_IDLE_TIMEOUT
+
+            - name: SPRING_DATASOURCE_HIKARI_IDLE_TIMEOUT
               valueFrom:
                 configMapKeyRef:
                   name: db-config
                   key: DB_IDLE_TIMEOUT
 
-            # Redis Configuration
-            - name: REDIS_HOST
+            # JPA/Hibernate Configuration
+            - name: SPRING_JPA_HIBERNATE_DDL_AUTO
+              value: "validate"
+
+            - name: SPRING_JPA_SHOW_SQL
+              value: "false"
+
+            - name: SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT
+              value: "org.hibernate.dialect.PostgreSQLDialect"
+
+            - name: SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL
+              value: "true"
+
+            # ==========================================
+            # REDIS CONFIGURATION (Spring Boot Standard)
+            # ==========================================
+            - name: SPRING_DATA_REDIS_HOST
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.redis.secretName }}
                   key: host
-            - name: REDIS_PORT
+
+            - name: SPRING_DATA_REDIS_PORT
               valueFrom:
-                configMapKeyRef:
-                  name: redis-config
-                  key: REDIS_PORT
-            - name: REDIS_PASSWORD
+                secretKeyRef:
+                  name: {{ .Values.redis.secretName }}
+                  key: port
+
+            - name: SPRING_DATA_REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.redis.secretName }}
                   key: password
                   optional: true
-            - name: REDIS_TIMEOUT
-              valueFrom:
-                configMapKeyRef:
-                  name: redis-config
-                  key: REDIS_TIMEOUT
-            - name: REDIS_POOL_MAX_ACTIVE
-              valueFrom:
-                configMapKeyRef:
-                  name: redis-config
-                  key: REDIS_POOL_MAX_ACTIVE
-            - name: REDIS_POOL_MAX_IDLE
-              valueFrom:
-                configMapKeyRef:
-                  name: redis-config
-                  key: REDIS_POOL_MAX_IDLE
-            - name: REDIS_POOL_MIN_IDLE
-              valueFrom:
-                configMapKeyRef:
-                  name: redis-config
-                  key: REDIS_POOL_MIN_IDLE
-            - name: REDIS_DATABASE
+
+            - name: SPRING_DATA_REDIS_DATABASE
               valueFrom:
                 configMapKeyRef:
                   name: redis-config
                   key: REDIS_DATABASE_ALERT_SIGNAL
 
-            # ✅ FIXED: gRPC Client Configuration
-            # Spring Boot will map GRPC_CLIENT_MARKET_IMPACT_SERVICE_ADDRESS to grpc.client.market-impact-service.address
+            - name: SPRING_DATA_REDIS_TIMEOUT
+              valueFrom:
+                configMapKeyRef:
+                  name: redis-config
+                  key: REDIS_TIMEOUT
+
+            # Redis SSL for AWS ElastiCache
+            - name: SPRING_DATA_REDIS_SSL_ENABLED
+              value: "true"
+
+            # Redis Pool Configuration (Lettuce)
+            - name: SPRING_DATA_REDIS_LETTUCE_POOL_MAX_ACTIVE
+              valueFrom:
+                configMapKeyRef:
+                  name: redis-config
+                  key: REDIS_POOL_MAX_ACTIVE
+
+            - name: SPRING_DATA_REDIS_LETTUCE_POOL_MAX_IDLE
+              valueFrom:
+                configMapKeyRef:
+                  name: redis-config
+                  key: REDIS_POOL_MAX_IDLE
+
+            - name: SPRING_DATA_REDIS_LETTUCE_POOL_MIN_IDLE
+              valueFrom:
+                configMapKeyRef:
+                  name: redis-config
+                  key: REDIS_POOL_MIN_IDLE
+
+            # ==========================================
+            # GRPC CLIENT CONFIGURATION
+            # ==========================================
+            # Market Impact Service gRPC Client
             - name: GRPC_CLIENT_MARKET_IMPACT_SERVICE_ADDRESS
               value: "static://market-impact.{{ .Values.global.namespace }}.svc.cluster.local:9090"
 
+            - name: GRPC_CLIENT_MARKET_IMPACT_SERVICE_NEGOTIATION_TYPE
+              value: "PLAINTEXT"
+
+            - name: GRPC_CLIENT_MARKET_IMPACT_SERVICE_ENABLE_KEEP_ALIVE
+              value: "true"
+
+            - name: GRPC_CLIENT_MARKET_IMPACT_SERVICE_KEEP_ALIVE_TIME
+              value: "30s"
+
+            - name: GRPC_CLIENT_MARKET_IMPACT_SERVICE_KEEP_ALIVE_TIMEOUT
+              value: "5s"
+
+            # ==========================================
+            # ACTUATOR / MONITORING
+            # ==========================================
+            - name: MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE
+              value: "health,info,prometheus,metrics"
+
+            - name: MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS
+              value: "always"
+
+            - name: MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED
+              value: "true"
+
+            - name: MANAGEMENT_HEALTH_LIVENESSSTATE_ENABLED
+              value: "true"
+
+            - name: MANAGEMENT_HEALTH_READINESSSTATE_ENABLED
+              value: "true"
+
+            - name: MANAGEMENT_METRICS_EXPORT_PROMETHEUS_ENABLED
+              value: "true"
+
+            # ==========================================
+            # LOGGING CONFIGURATION
+            # ==========================================
+            - name: LOGGING_LEVEL_ROOT
+              value: "INFO"
+
+            - name: LOGGING_LEVEL_COM_ALERTSIGNAL
+              value: "DEBUG"
+
+            - name: LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_DATA_REDIS
+              value: "DEBUG"
+
+            - name: LOGGING_PATTERN_CONSOLE
+              value: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+            # ==========================================
+            # JVM CONFIGURATION
+            # ==========================================
+            - name: JAVA_OPTS
+              value: >-
+                -Xms256m
+                -Xmx512m
+                -XX:+UseG1GC
+                -XX:MaxGCPauseMillis=200
+                -XX:+PrintGCDetails
+                -XX:+PrintGCDateStamps
+                -XX:+PrintGCTimeStamps
+                -XX:+UseGCLogFileRotation
+                -XX:NumberOfGCLogFiles=10
+                -XX:GCLogFileSize=10M
+                -Djava.security.egd=file:/dev/./urandom
+
+            # ==========================================
+            # ENVIRONMENT
+            # ==========================================
+            - name: SPRING_PROFILES_ACTIVE
+              value: {{ .Values.global.environment | quote }}
+
+          # Resource Limits
           resources:
             {{- toYaml .Values.alertSignal.resources | nindent 12 }}
 
+          # Liveness Probe
           livenessProbe:
-            {{- toYaml .Values.alertSignal.livenessProbe | nindent 12 }}
+            httpGet:
+              path: /api/actuator/health/liveness
+              port: {{ .Values.alertSignal.service.httpPort }}
+              scheme: HTTP
+            initialDelaySeconds: 90
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 5
 
+          # Readiness Probe
           readinessProbe:
-            {{- toYaml .Values.alertSignal.readinessProbe | nindent 12 }}
+            httpGet:
+              path: /api/actuator/health/readiness
+              port: {{ .Values.alertSignal.service.httpPort }}
+              scheme: HTTP
+            initialDelaySeconds: 60
+            periodSeconds: 5
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 3
+
+          # Startup Probe (for slow-starting applications)
+          startupProbe:
+            httpGet:
+              path: /api/actuator/health/liveness
+              port: {{ .Values.alertSignal.service.httpPort }}
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 30
+
+          # Volume Mounts (if needed for logs or temp files)
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: logs
+              mountPath: /var/log/app
+
+      # Volumes
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: logs
+          emptyDir: {}
+
+      # DNS Configuration
+      dnsPolicy: ClusterFirst
+
+      # Restart Policy
+      restartPolicy: Always
+
+      # Termination Grace Period
+      terminationGracePeriodSeconds: 30
 {{- end }}
