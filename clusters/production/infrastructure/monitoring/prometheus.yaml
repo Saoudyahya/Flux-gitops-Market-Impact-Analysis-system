@@ -32,7 +32,7 @@ spec:
       prometheusSpec:
         replicas: 1
         retention: 15d
-        retentionSize: "18GB"
+        retentionSize: "2GB"
 
         # ✅ UPDATED: Use relative path for subpath routing (no host)
         # AWS ELB will provide the external domain
@@ -52,7 +52,7 @@ spec:
               accessModes: ["ReadWriteOnce"]
               resources:
                 requests:
-                  storage: 20Gi
+                  storage: 2Gi
 
         # Service Monitor Selector
         serviceMonitorSelectorNilUsesHelmValues: false
