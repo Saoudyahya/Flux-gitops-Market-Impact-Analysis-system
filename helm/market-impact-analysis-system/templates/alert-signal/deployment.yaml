@@ -27,13 +27,11 @@ spec:
         prometheus.io/port: "8081"
         prometheus.io/path: "/api/actuator/prometheus"
     spec:
-      # Security Context
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
         fsGroup: 1000
 
-      # Service Account (if needed)
       serviceAccountName: default
 
       containers:
@@ -41,7 +39,6 @@ spec:
           image: {{ include "market-impact.image" (dict "registry" .Values.global.imageRegistry "repository" .Values.alertSignal.image.repository "tag" .Values.alertSignal.image.tag) }}
           imagePullPolicy: {{ .Values.global.imagePullPolicy }}
 
-          # Container Security Context
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: false
@@ -49,7 +46,6 @@ spec:
               drop:
                 - ALL
 
-          # Ports
           ports:
             - containerPort: {{ .Values.alertSignal.service.httpPort }}
               name: http
@@ -58,7 +54,6 @@ spec:
               name: grpc
               protocol: TCP
 
-          # Environment Variables
           env:
             # ==========================================
             # SERVER CONFIGURATION
@@ -76,23 +71,10 @@ spec:
               value: "alert-signal-service"
 
             # ==========================================
-            # DATABASE CONFIGURATION (Spring Boot)
+            # DATABASE CONFIGURATION
+            # ✅ CRITICAL FIX: Remove SPRING_DATASOURCE_URL
+            # Let Spring Boot build it from individual variables
             # ==========================================
-            - name: SPRING_DATASOURCE_URL
-              value: "jdbc:postgresql://$(DB_HOST):$(DB_PORT)/$(DB_DATABASE)?sslmode=require"
-
-            - name: SPRING_DATASOURCE_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.database.secretName }}
-                  key: username
-
-            - name: SPRING_DATASOURCE_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.database.secretName }}
-                  key: password
-
             - name: DB_HOST
               valueFrom:
                 secretKeyRef:
@@ -111,34 +93,66 @@ spec:
                   name: db-config
                   key: ALERTSIGNAL_DB
 
+            - name: DB_SCHEMA
+              valueFrom:
+                configMapKeyRef:
+                  name: db-config
+                  key: DB_SCHEMA
+                  optional: true
+
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.secretName }}
+                  key: username
+
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.secretName }}
+                  key: password
+
             # Database Pool Configuration
-            - name: SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE
+            - name: DB_POOL_MIN_SIZE
               valueFrom:
                 configMapKeyRef:
                   name: db-config
                   key: DB_POOL_MIN_SIZE
 
-            - name: SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE
+            - name: DB_POOL_MAX_SIZE
               valueFrom:
                 configMapKeyRef:
                   name: db-config
                   key: DB_POOL_MAX_SIZE
 
-            - name: SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT
+            - name: DB_CONNECTION_TIMEOUT
               valueFrom:
                 configMapKeyRef:
                   name: db-config
                   key: DB_CONNECTION_TIMEOUT
 
-            - name: SPRING_DATASOURCE_HIKARI_IDLE_TIMEOUT
+            - name: DB_IDLE_TIMEOUT
               valueFrom:
                 configMapKeyRef:
                   name: db-config
                   key: DB_IDLE_TIMEOUT
 
+            # ✅ OPTIONAL: Set these for Spring Boot if needed
+            - name: SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE
+              value: "$(DB_POOL_MIN_SIZE)"
+
+            - name: SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE
+              value: "$(DB_POOL_MAX_SIZE)"
+
+            - name: SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT
+              value: "$(DB_CONNECTION_TIMEOUT)"
+
+            - name: SPRING_DATASOURCE_HIKARI_IDLE_TIMEOUT
+              value: "$(DB_IDLE_TIMEOUT)"
+
             # JPA/Hibernate Configuration
             - name: SPRING_JPA_HIBERNATE_DDL_AUTO
-              value: "validate"
+              value: "update"
 
             - name: SPRING_JPA_SHOW_SQL
               value: "false"
@@ -150,80 +164,99 @@ spec:
               value: "true"
 
             # ==========================================
-            # REDIS CONFIGURATION (Spring Boot Standard)
+            # REDIS CONFIGURATION
             # ==========================================
-            - name: SPRING_DATA_REDIS_HOST
+            - name: REDIS_HOST
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.redis.secretName }}
                   key: host
 
-            - name: SPRING_DATA_REDIS_PORT
+            - name: REDIS_PORT
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.redis.secretName }}
                   key: port
 
-            - name: SPRING_DATA_REDIS_PASSWORD
+            - name: REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.redis.secretName }}
                   key: password
                   optional: true
 
-            - name: SPRING_DATA_REDIS_DATABASE
+            - name: REDIS_DATABASE
               valueFrom:
                 configMapKeyRef:
                   name: redis-config
                   key: REDIS_DATABASE_ALERT_SIGNAL
 
-            - name: SPRING_DATA_REDIS_TIMEOUT
+            - name: REDIS_TIMEOUT
               valueFrom:
                 configMapKeyRef:
                   name: redis-config
                   key: REDIS_TIMEOUT
 
-            # Redis SSL for AWS ElastiCache
+            - name: SPRING_DATA_REDIS_HOST
+              value: "$(REDIS_HOST)"
+
+            - name: SPRING_DATA_REDIS_PORT
+              value: "$(REDIS_PORT)"
+
+            - name: SPRING_DATA_REDIS_PASSWORD
+              value: "$(REDIS_PASSWORD)"
+
+            - name: SPRING_DATA_REDIS_DATABASE
+              value: "$(REDIS_DATABASE)"
+
+            - name: SPRING_DATA_REDIS_TIMEOUT
+              value: "$(REDIS_TIMEOUT)ms"
+
             - name: SPRING_DATA_REDIS_SSL_ENABLED
               value: "true"
 
-            # Redis Pool Configuration (Lettuce)
-            - name: SPRING_DATA_REDIS_LETTUCE_POOL_MAX_ACTIVE
+            # Redis Pool Configuration
+            - name: REDIS_POOL_MAX_ACTIVE
               valueFrom:
                 configMapKeyRef:
                   name: redis-config
                   key: REDIS_POOL_MAX_ACTIVE
 
-            - name: SPRING_DATA_REDIS_LETTUCE_POOL_MAX_IDLE
+            - name: REDIS_POOL_MAX_IDLE
               valueFrom:
                 configMapKeyRef:
                   name: redis-config
                   key: REDIS_POOL_MAX_IDLE
 
-            - name: SPRING_DATA_REDIS_LETTUCE_POOL_MIN_IDLE
+            - name: REDIS_POOL_MIN_IDLE
               valueFrom:
                 configMapKeyRef:
                   name: redis-config
                   key: REDIS_POOL_MIN_IDLE
 
+            - name: SPRING_DATA_REDIS_LETTUCE_POOL_MAX_ACTIVE
+              value: "$(REDIS_POOL_MAX_ACTIVE)"
+
+            - name: SPRING_DATA_REDIS_LETTUCE_POOL_MAX_IDLE
+              value: "$(REDIS_POOL_MAX_IDLE)"
+
+            - name: SPRING_DATA_REDIS_LETTUCE_POOL_MIN_IDLE
+              value: "$(REDIS_POOL_MIN_IDLE)"
+
             # ==========================================
             # GRPC CLIENT CONFIGURATION
             # ==========================================
-            # Market Impact Service gRPC Client
             - name: GRPC_CLIENT_MARKET_IMPACT_SERVICE_ADDRESS
               value: "static://market-impact.{{ .Values.global.namespace }}.svc.cluster.local:9090"
 
             - name: GRPC_CLIENT_MARKET_IMPACT_SERVICE_NEGOTIATION_TYPE
               value: "PLAINTEXT"
 
-            - name: GRPC_CLIENT_MARKET_IMPACT_SERVICE_ENABLE_KEEP_ALIVE
-              value: "true"
+            - name: EXTERNAL_SERVICES_MARKET_IMPACT_HOST
+              value: "market-impact.{{ .Values.global.namespace }}.svc.cluster.local"
 
-            - name: GRPC_CLIENT_MARKET_IMPACT_SERVICE_KEEP_ALIVE_TIME
-              value: "30s"
-
-            - name: GRPC_CLIENT_MARKET_IMPACT_SERVICE_KEEP_ALIVE_TIMEOUT
-              value: "5s"
+            - name: EXTERNAL_SERVICES_MARKET_IMPACT_PORT
+              value: "9090"
 
             # ==========================================
             # ACTUATOR / MONITORING
@@ -247,15 +280,12 @@ spec:
               value: "true"
 
             # ==========================================
-            # LOGGING CONFIGURATION
+            # LOGGING
             # ==========================================
             - name: LOGGING_LEVEL_ROOT
               value: "INFO"
 
             - name: LOGGING_LEVEL_COM_ALERTSIGNAL
-              value: "DEBUG"
-
-            - name: LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_DATA_REDIS
               value: "DEBUG"
 
             - name: LOGGING_PATTERN_CONSOLE
@@ -267,11 +297,9 @@ spec:
             - name: SPRING_PROFILES_ACTIVE
               value: {{ .Values.global.environment | quote }}
 
-          # Resource Limits
           resources:
             {{- toYaml .Values.alertSignal.resources | nindent 12 }}
 
-          # Liveness Probe
           livenessProbe:
             httpGet:
               path: /api/actuator/health/liveness
@@ -283,7 +311,6 @@ spec:
             successThreshold: 1
             failureThreshold: 5
 
-          # Readiness Probe
           readinessProbe:
             httpGet:
               path: /api/actuator/health/readiness
@@ -295,7 +322,6 @@ spec:
             successThreshold: 1
             failureThreshold: 3
 
-          # Startup Probe (for slow-starting applications)
           startupProbe:
             httpGet:
               path: /api/actuator/health/liveness
@@ -307,26 +333,19 @@ spec:
             successThreshold: 1
             failureThreshold: 30
 
-          # Volume Mounts (if needed for logs or temp files)
           volumeMounts:
             - name: tmp
               mountPath: /tmp
             - name: logs
               mountPath: /var/log/app
 
-      # Volumes
       volumes:
         - name: tmp
           emptyDir: {}
         - name: logs
           emptyDir: {}
 
-      # DNS Configuration
       dnsPolicy: ClusterFirst
-
-      # Restart Policy
       restartPolicy: Always
-
-      # Termination Grace Period
       terminationGracePeriodSeconds: 30
 {{- end }}
