@@ -262,23 +262,6 @@ spec:
               value: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
 
             # ==========================================
-            # JVM CONFIGURATION
-            # ==========================================
-            - name: JAVA_OPTS
-              value: >-
-                -Xms256m
-                -Xmx512m
-                -XX:+UseG1GC
-                -XX:MaxGCPauseMillis=200
-                -XX:+PrintGCDetails
-                -XX:+PrintGCDateStamps
-                -XX:+PrintGCTimeStamps
-                -XX:+UseGCLogFileRotation
-                -XX:NumberOfGCLogFiles=10
-                -XX:GCLogFileSize=10M
-                -Djava.security.egd=file:/dev/./urandom
-
-            # ==========================================
             # ENVIRONMENT
             # ==========================================
             - name: SPRING_PROFILES_ACTIVE
